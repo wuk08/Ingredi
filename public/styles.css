@@ -1113,21 +1113,27 @@ progress::-moz-progress-bar {
   width: 13px;
   height: 13px;
 }
-.nearby-search {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.nearby-search .search-field {
-  flex: 1;
-  margin: 0 0 12px;
-  box-shadow: 0 2px 10px #30432907;
-  background: #f5f7f0;
-}
-.filter-button {
-  background: #f5f7f0;
-  margin-bottom: 12px;
-}
+.nearby-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+.nearby-heading h1 { flex-shrink: 0; }
+.nearby-home { display: flex; align-items: center; gap: 6px; min-width: 0; max-width: 65%; min-height: 44px; padding: 6px 0 6px 8px; color: #637367; font-size: 13px; }
+.nearby-home span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nearby-home .icon { width: 16px; height: 16px; }
+.nearby-home .icon:last-child { width: 13px; }
+.nearby-toolbar { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+.nearby-scope { flex: 1; min-width: 0; margin: 0; padding: 4px; }
+.nearby-scope button { flex: 1; min-width: 0; min-height: 36px; padding: 7px 9px; font-size: 13px; white-space: nowrap; }
+.nearby-toolbar > .icon-button { width: 44px; height: 44px; min-width: 44px; border-radius: 13px; }
+.nearby-view-toggle { border: 1px solid var(--line); background: #fff; }
+.nearby-create { background: var(--green); color: #fff; }
+.nearby-search { display: flex; align-items: center; gap: 10px; }
+.nearby-search .search-field { flex: 1; min-width: 0; min-height: 48px; margin: 0; box-shadow: none; background: var(--soft); }
+.nearby-search .search-field input { min-height: 48px; }
+.nearby-search .filter-button { position: relative; width: 44px; height: 44px; min-width: 44px; margin: 0; border: 1px solid var(--line); border-radius: 13px; background: #fff; }
+.filter-button.has-filters { border-color: var(--green); color: var(--green); }
+.filter-count { position: absolute; top: -4px; right: -4px; min-width: 18px; padding: 2px 4px; border-radius: 10px; background: var(--green); color: #fff; font-size: 10px; line-height: 14px; }
+.nearby-summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 40px; margin: 6px 0; color: #758077; font-size: 12px; }
+.nearby-summary .text-button { font-size: 12px; padding-right: 0; }
+.nearby-map-panel { overflow: hidden; border: 1px solid var(--line); border-radius: 18px; background: #fff; }
 .scroll-chips {
   flex-wrap: nowrap;
   overflow-x: auto;
@@ -1137,43 +1143,7 @@ progress::-moz-progress-bar {
   font-size: 12px;
   min-height: 38px;
 }
-.nearby-selects {
-  display: flex;
-  gap: 7px;
-  margin: 13px 0;
-  overflow: auto;
-  scrollbar-width: none;
-}
-.nearby-selects label {
-  flex-shrink: 0;
-}
-.nearby-selects select {
-  font-size: 11px;
-  min-height: 34px;
-  padding: 5px 8px;
-  border-radius: 22px;
-}
-.neighborhood-map {
-  height: 560px;
-  position: relative;
-  border-radius: 20px;
-  background-color: #e9ede3;
-  background-image:
-    linear-gradient(
-      90deg,
-      transparent 0 22%,
-      #fcfcf7 22% 26%,
-      transparent 26% 62%,
-      #fcfcf7 62% 66%,
-      transparent 66%),
-    linear-gradient(
-      transparent 0 23%,
-      #fcfcf7 23% 27%,
-      transparent 27% 68%,
-      #fcfcf7 68% 72%,
-      transparent 72%);
-  overflow: hidden;
-}
+.neighborhood-map { height: clamp(300px, 46dvh, 460px); min-height: 0; position: relative; width: 100%; margin: 0; border-radius: 0; background: #eef0ed; overflow: hidden; }
 .map-park {
   position: absolute;
   background: #d7e2c8;
@@ -1304,60 +1274,18 @@ progress::-moz-progress-bar {
   letter-spacing: 1.3px;
   color: #9aa98b;
 }
-.map-center {
-  position: absolute;
-  right: 13px;
-  top: 40%;
-  background: white;
-  box-shadow: 0 2px 8px #30432915;
-}
-.map-preview {
-  position: absolute;
-  bottom: 16px;
-  left: 16px;
-  right: 16px;
-  z-index: 4;
-}
-.map-preview .post-card {
-  background: white;
-  box-shadow: 0 6px 20px #344a2820;
-}
-.map-preview .post-card > .food-art,
-.map-preview .post-card > .post-photo {
-  width: 70px;
-  height: 76px;
-}
-.nearby-tools {
-  position: fixed;
-  left: 256px;
-  right: 24px;
-  bottom: 32px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 20px;
-  pointer-events: none;
-  z-index: 12;
-}
-.nearby-tools > button {
-  pointer-events: auto;
-  box-shadow: 0 4px 16px #263d3425;
-  min-height: 44px;
-  border-radius: 28px;
-  font-size: 13px;
-}
-.nearby-tools .compose-fab {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  width: 48px;
-  height: 48px;
-  min-height: 48px;
-  padding: 0;
-  background: white;
-  color: var(--green);
-  box-shadow: 0 3px 15px #263d3420;
-}
+.map-center { position: absolute; right: 12px; top: 12px; z-index: 5; width: 44px; height: 44px; border-radius: 13px; border: 1px solid #dfe5df; background: #fff; color: var(--green); box-shadow: 0 2px 8px #25382e0c; }
+.map-preview { position: relative; inset: auto; width: 100%; padding: 12px; border-top: 1px solid var(--line); background: #fff; }
+.map-preview .post-card { width: 100%; padding: 4px; border: 0; border-radius: 12px; background: #fff; box-shadow: none; text-align: left; }
+.map-preview .post-card > .food-art, .map-preview .post-card > .post-photo { width: 64px; height: 72px; flex-shrink: 0; }
+.map-preview .post-card-copy { min-width: 0; }
+.map-preview .post-card-copy > strong { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; line-height: 1.35; }
+.map-preview .post-byline { flex-wrap: wrap; gap: 4px 10px; }
+.map-preview .empty-state { padding: 20px 12px; }
+.map-gesture-hint { display: none; position: absolute; left: 12px; bottom: 34px; z-index: 3; border-radius: 8px; padding: 5px 8px; background: #fffffff0; color: #64746a; font-size: 10px; pointer-events: none; }
+.nearby-more { margin-top: 26px; }
+.nearby-more h2 { font-size: 18px; letter-spacing: -.3px; }
+@media (pointer: coarse) { .map-gesture-hint { display: block; } }
 .list-count {
   font-size: 12px;
   color: #8b957e;
@@ -2909,9 +2837,6 @@ legend {
     padding-left: 24px;
     padding-right: 24px;
   }
-  .nearby-tools {
-    left: 220px;
-  }
   .recipe-picture {
     height: 160px;
   }
@@ -3293,83 +3218,22 @@ legend {
   .nearby-page {
     padding-top: 5px;
   }
-  .nearby-search .search-field {
-    margin: 0 0 10px;
-    min-height: 45px;
-  }
-  .nearby-search .search-field input {
-    font-size: 12px;
-    min-height: 45px;
-  }
-  .filter-button {
-    width: 44px;
-    height: 44px;
-    margin-bottom: 10px;
-  }
   .scroll-chips .chip {
     font-size: 11px;
     padding: 7px 12px;
     min-height: 35px;
   }
-  .nearby-selects {
-    margin: 11px 0;
-  }
-  .nearby-selects select {
-    font-size: 10px;
-    min-height: 32px;
-    max-width: 148px;
-  }
   .demo-label {
     font-size: 9px;
     margin: 12px 0;
-  }
-  .neighborhood-map {
-    height: calc(100dvh - 295px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
-    min-height: 340px;
-    border-radius: 16px;
-    margin: 0 -16px;
-    width: calc(100% + 32px);
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
-  }
-  .map-preview {
-    bottom: 12px;
-    left: 16px;
-    right: 16px;
-  }
-  .map-preview .post-card {
-    padding: 10px;
-    border-radius: 16px;
   }
   .map-preview .post-card > .food-art,
   .map-preview .post-card > .post-photo {
     width: 65px;
     height: 72px;
   }
-  .map-preview .post-card-copy > strong {
-    font-size: 12px;
-  }
   .map-label {
     font-size: 7px;
-  }
-  .nearby-tools {
-    left: 16px;
-    right: 16px;
-    bottom: calc(103px + env(safe-area-inset-bottom));
-    justify-content: center;
-  }
-  .nearby-tools > .button {
-    font-size: 11px;
-    min-height: 40px;
-    padding: 10px 16px;
-  }
-  .nearby-tools .compose-fab {
-    width: 44px;
-    height: 44px;
-    min-height: 44px;
-  }
-  .nearby-workspace .nearby-page {
-    padding-bottom: 100px;
   }
   .nearby-list .post-card > .food-art,
   .nearby-list .post-card > .post-photo {
@@ -3654,13 +3518,6 @@ legend {
   width: 40px;
   height: 40px;
 }
-.neighborhood-map .nearby-tools {
-  position: absolute;
-  bottom: 120px;
-  left: 16px;
-  right: 16px;
-  z-index: 5;
-}
 button.chip,
 .scroll-chips button.chip,
 .filters button.chip,
@@ -3675,20 +3532,29 @@ button.button.small,
 .map-canvas { position: absolute; inset: 0; z-index: 0; background: #e8eddf; }
 .map-canvas .leaflet-control-attribution { max-width: 230px; font-size: 10px; line-height: 1.5; background: #fffffff2; }
 .map-canvas .leaflet-control-zoom a { width: 40px; height: 40px; line-height: 40px; }
-.real-map-pin { display: grid; place-items: center; border: 3px solid white; border-radius: 50%; background: #829871; color: white; box-shadow: 0 2px 8px #25382e44; }
-.real-map-pin.selected { background: var(--green); }
+.real-map-pin { display: grid; place-items: center; border: 2px solid white; border-radius: 50%; background: #fff; color: var(--green); box-shadow: 0 1px 5px #25382e24; }
+.real-map-pin.selected { background: var(--green); color: #fff; }
 .real-map-pin .icon { width: 22px; height: 22px; }
 .map-canvas .real-map-pin { display: grid; place-items: center; font-size: 16px; font-weight: 700; }
-.map-scope { position: absolute; top: 44px; right: 10px; z-index: 3; background: #fffffff0; border-radius: 10px; padding: 6px 9px; font-size: 10px; color: #52634a; pointer-events: none; }
+.map-canvas .leaflet-tile-pane { filter: grayscale(1) contrast(.9) brightness(1.06); }
+.map-canvas .leaflet-control-zoom { border: 1px solid #dfe5df; border-radius: 12px; box-shadow: 0 2px 8px #25382e0c; overflow: hidden; }
+.map-canvas .leaflet-control-zoom a { color: #52655a; background: #fff; }
+.nearby-page .nearby-list { margin: 14px 0 0; }
+@media (max-width: 760px) {
+  .nearby-page { padding-top: 12px; }
+  .nearby-heading { margin-bottom: 12px; }
+  .nearby-heading h1 { font-size: 25px; }
+  .nearby-home { font-size: 12px; }
+  .nearby-toolbar { margin-bottom: 12px; }
+  .nearby-scope button { font-size: 12px; padding-inline: 6px; }
+  .nearby-summary { min-height: 28px; margin: 4px 0; font-size: 11px; }
+  .neighborhood-map { height: clamp(200px, calc(100dvh - 480px - env(safe-area-inset-top) - env(safe-area-inset-bottom)), 360px); }
+  .map-preview .post-card-copy > strong { font-size: 14px; }
+}
 .location-gate { display: grid; justify-items: center; gap: 20px; padding: 48px 20px; text-align: center; background: var(--soft); border-radius: 20px; margin-top: 24px; }
 .location-gate > .icon { width: 42px; height: 42px; color: var(--green); }
 .location-gate p { max-width: 380px; font-size: 15px; color: #63745a; }
 .location-gate small { max-width: 350px; color: #738066; }
-.residence-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
-.residence-heading h1 { font-size: clamp(22px, 4vw, 30px); overflow-wrap: anywhere; }
-.residence-heading small { display: block; color: #63745a; margin-top: 6px; }
-.residence-heading .text-button { flex-shrink: 0; }
-.residence-scope { margin: 0 0 18px; }
 .residence-choices { display: grid; gap: 12px; margin: 12px 0 20px; }
 .residence-choices label { display: flex; align-items: center; gap: 12px; border: 1px solid #cbd6c6; border-radius: 14px; padding: 16px; cursor: pointer; font-size: 15px; }
 .residence-choices label:has(input:checked) { border-color: var(--green); background: var(--soft); }
@@ -3705,8 +3571,6 @@ button.button.small,
 .residence-result:hover { background: var(--soft); }
 .check-row { display: flex; align-items: flex-start; gap: 12px; margin: 20px 0; font-size: 14px; line-height: 1.5; }
 .check-row input { flex-shrink: 0; margin-top: 2px; }
-.student-check-nudge { width: 100%; padding: 13px 16px; margin-bottom: 16px; text-align: left; line-height: 1.4; background: #f2f5e9; color: var(--green); border: 1px solid #dbe2cb; border-radius: 12px; font-size: 13px; }
-.same-building-filter { align-self: center; color: #63745a; font-size: 13px; padding: 8px 0; }
 .sample-student-id { display: grid; gap: 18px; border: 1px solid #cad5c3; background: linear-gradient(130deg, #e8f0df, #fff); border-radius: 18px; padding: 24px; margin: 24px 0; color: var(--green); box-shadow: 0 6px 20px #25382e0c; }
 .sample-student-id > strong { font-size: 24px; }
 .sample-student-id > span:last-child { font-size: 12px; color: #63745a; }
@@ -3716,14 +3580,6 @@ button.button.small,
 .verification-result { display: grid; gap: 22px; text-align: center; padding: 20px 0; }
 .verification-result > .icon { width: 56px; height: 56px; color: var(--green); justify-self: center; }
 .form-label[hidden] { display: none; }
-@media (max-width: 760px) {
-  .residence-heading { margin-bottom: 12px; }
-  .residence-heading h1 { font-size: 23px; }
-  .residence-heading .eyebrow { font-size: 9px; }
-  .residence-heading small { font-size: 10px; }
-  .residence-scope { margin-bottom: 12px; }
-  .student-check-nudge { margin-bottom: 12px; padding: 10px 12px; font-size: 12px; }
-}
 .map-load-notice { position: absolute; top: 145px; left: 14px; right: 14px; z-index: 450; background: #fff8e9; color: #766244; padding: 12px; border-radius: 10px; font: 12px/1.5 -apple-system,sans-serif; }
 .map-load-notice[hidden] { display: none; }
 .group-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-top: 24px; }
@@ -3732,29 +3588,6 @@ button.button.small,
 .inbox-title small, .inbox-row > span > small, .ingredient-row small,
 .have-label, .recipe-card small, .impact-card > div > span {
   color: #738066;
-}
-@media (max-width: 760px) {
-  .nearby-workspace:has(.neighborhood-map) {
-    height: 100dvh;
-    display: flex;
-    flex-direction: column;
-  }
-  .nearby-workspace:has(.neighborhood-map) .app-header { flex-shrink: 0; }
-  .nearby-page:has(.neighborhood-map) {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    min-height: 0;
-    width: 100%;
-    max-width: none;
-    padding-bottom: calc(82px + env(safe-area-inset-bottom));
-  }
-  .nearby-page:has(.neighborhood-map) > :not(.neighborhood-map) { flex-shrink: 0; }
-  .nearby-page .neighborhood-map {
-    flex: 1;
-    min-height: 260px;
-    height: auto;
-  }
 }
 /* Small editable text triggers iPhone focus zoom. Keep controls readable while
    preserving the user's normal pinch-to-zoom and accessibility settings. */

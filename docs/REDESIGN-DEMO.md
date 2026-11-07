@@ -66,9 +66,9 @@ This update adds the native Capacitor Geolocation plugin. On the Mac, run the pi
 
 ## Verification
 
-- Original receipt/domain/native tests retained; community/discovery/navigation, map/location, and residence tests (58 total).
+- Original receipt/domain/native tests retained; community/discovery/navigation, map/location, and residence tests (59 total).
 - The browser walkthrough checks actual IndexedDB draft/photo restoration, linked post requests, sample replies, handoff rewards/ratings, membership persistence, recipe bookmarks, missing-ingredient search, and reset preserving the fridge.
-- Phone layouts checked at 375, 390, and 430px, with a desktop sidebar layout. Map controls sit above the selected post card and navigation; detail screens reserve space for bottom actions.
+- Phone layouts checked at 375, 390, and 430px, with a desktop sidebar layout. Nearby scrolls vertically; its selected card sits below the map in normal page flow, followed by more listings. Filters live in a separate panel, and the muted map retains roads, buildings, labels, and attribution. Detail screens reserve space for bottom actions.
 - Web and iOS frontend builds are checked independently from the native Xcode build.
 - Real AI scanning uses the existing backend. This redesign's interactive acceptance runs use the isolated local demo rather than adding test data to a user's signed-in fridge.
 

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {demoPosition,currentPosition,defaultView} from '../public/lib/nearby-map.mjs';
+import {demoPosition,currentPosition,defaultView,mountMap} from '../public/lib/nearby-map.mjs';
 import {seedCommunity,ensureResidenceState,actions,communityView} from '../public/lib/community.mjs';
 import {ensurePhotoPermissions,locationPermissions} from '../scripts/lib/ios-config.mjs';
 import {nearby} from '../public/features/community-views.mjs';
@@ -49,4 +49,28 @@ test('native map permissions and tile policy settings are bundled',async()=>{
   const plist=ensurePhotoPermissions('<plist><dict></dict></plist>');for(const key of Object.keys(locationPermissions))assert.ok(plist.includes(`<key>${key}</key>`));assert.equal(ensurePhotoPermissions(plist),plist);
   const config=JSON.parse(await readFile(new URL('../capacitor.config.json',import.meta.url),'utf8'));assert.match(config.appendUserAgent,/Ingredi/);
   const server=await readFile(new URL('../scripts/serve.mjs',import.meta.url),'utf8');assert.match(server,/https:\/\/tile\.openstreetmap\.org/);assert.match(server,/strict-origin-when-cross-origin/);
+});
+
+test('map teardown ignores queued movement and resize callbacks after changing views',t=>{
+  const originals={L:globalThis.L,document:globalThis.document,ResizeObserver:globalThis.ResizeObserver};
+  t.after(()=>Object.assign(globalThis,originals));
+  const handlers=new Map();let removed=false,resizes=0,views=0,resizeCallback;
+  const layer={addTo(){return this;},bindTooltip(){return this;},on(){return this;}};
+  const map={
+    setView(){return this;},
+    on(names,callback){for(const name of names.split(' '))handlers.set(name,callback);return this;},
+    off(names){for(const name of names.split(' '))handlers.delete(name);return this;},
+    getCenter(){assert.equal(removed,false,'movement must not read a removed map');return {lat:40,lng:-74};},
+    getZoom(){return 14;},
+    invalidateSize(){assert.equal(removed,false,'queued resize must not touch a removed map');resizes++;},
+    remove(){removed=true;handlers.get('moveend')?.();}
+  };
+  globalThis.L={map:()=>map,control:{attribution:()=>layer},tileLayer:()=>layer,circleMarker:()=>layer};
+  globalThis.document={createElement:()=>({})};
+  globalThis.ResizeObserver=class{constructor(callback){resizeCallback=callback;}observe(){}disconnect(){}};
+  const dispose=mountMap({element:{append(){}},posts:[],location:[40,-74],onSelect(){},onView(){views++;}});
+  const queuedMovement=handlers.get('moveend');queuedMovement();resizeCallback();
+  assert.equal(views,1);assert.equal(resizes,1);
+  dispose();resizeCallback();queuedMovement();dispose();
+  assert.equal(removed,true);assert.equal(views,1);assert.equal(resizes,1);
 });

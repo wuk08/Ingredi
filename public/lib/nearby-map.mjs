@@ -29,8 +29,11 @@ export function mountMap({element,posts,selected,view,location,residenceId,resid
   if(!validLocation(location)){element.textContent='Add a map location to your residence to display the map.';return ()=>{};}
   const L=globalThis.L;
   if(!L){element.innerHTML='<p class="map-load-notice">The map could not load. Switch to List to browse demo posts.</p>';return ()=>{};}
-  const map=L.map(element,{attributionControl:false}).setView((view||defaultView(location)).center,(view||defaultView(location)).zoom);
-  L.control.attribution({position:'topright',prefix:false}).addTo(map);
+  const touch = Boolean(globalThis.matchMedia?.('(pointer: coarse)').matches);
+  // Let the page scroll over the map. Touch users can still pinch and move it with two fingers.
+  // Rendering replaces this map; synchronous zoom avoids transition callbacks on a removed map.
+  const map=L.map(element,{attributionControl:false,scrollWheelZoom:false,dragging:!touch,zoomAnimation:false,fadeAnimation:false,markerZoomAnimation:false}).setView((view||defaultView(location)).center,(view||defaultView(location)).zoom);
+  L.control.attribution({position:'bottomright',prefix:false}).addTo(map);
   const tiles=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors'}).addTo(map);
   const notice=document.createElement('div');notice.className='map-load-notice';notice.hidden=true;notice.textContent='Street tiles unavailable. Your residence is still selected. Check your connection.';element.append(notice);
   let loaded=0;tiles.on('tileload',()=>{loaded++;notice.hidden=true;});tiles.on('tileerror',()=>{if(!loaded)notice.hidden=false;});
@@ -38,8 +41,10 @@ export function mountMap({element,posts,selected,view,location,residenceId,resid
   const chosen=buildingPosts.find(p=>p.id===selected)||buildingPosts[0];
   const markers=[...posts.filter(p=>!residenceId||p.residenceId!==residenceId),...(chosen?[chosen]:[])];
   for(const p of markers){const same=residenceId&&p.residenceId===residenceId;const label=same?`${residenceName} · ${buildingPosts.length} sample posts`:p.title;const marker=L.marker(same?location:demoPosition(p,location),{title:label,alt:label,icon:L.divIcon({className:`real-map-pin ${p.id===selected?'selected':''}`,html:same?`<span>${buildingPosts.length}</span>`:icon('pin'),iconSize:[44,44],iconAnchor:[22,40]})}).addTo(map);marker.on('click',()=>onSelect(same?buildingPosts[(buildingPosts.indexOf(p)+1)%buildingPosts.length].id:p.id));marker.bindTooltip(escape(label));}
-  if(location)L.circleMarker(location,{radius:8,color:'#fff',weight:3,fillColor:'#3478b7',fillOpacity:1}).addTo(map).bindTooltip(escape(residenceName||'Your residence'));
-  map.on('moveend zoomend',()=>{const center=map.getCenter();onView({center:[center.lat,center.lng],zoom:map.getZoom()});});
-  const resize=new ResizeObserver(()=>map.invalidateSize({pan:false}));resize.observe(element);
-  return ()=>{resize.disconnect();map.remove();};
+  if(location&&!buildingPosts.length)L.circleMarker(location,{radius:6,color:'#fff',weight:2,fillColor:'#234d3c',fillOpacity:1}).addTo(map).bindTooltip(escape(residenceName||'Your residence'));
+  let disposed=false;
+  const moved=()=>{if(disposed)return;const center=map.getCenter();onView({center:[center.lat,center.lng],zoom:map.getZoom()});};
+  map.on('moveend zoomend',moved);
+  const resize=new ResizeObserver(()=>{if(!disposed)map.invalidateSize({pan:false});});resize.observe(element);
+  return ()=>{if(disposed)return;disposed=true;resize.disconnect();map.off('moveend zoomend',moved);map.remove();};
 }

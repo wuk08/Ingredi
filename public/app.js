@@ -317,11 +317,23 @@ async function action(name) {
   if (name === 'residence-setup') { residenceFlows.openSetup(); return; }
   if (name === 'residence-location') { residenceFlows.openSetup({ updateCurrent: true }); return; }
   if (name === 'student-check') { await residenceFlows.ensureReady(true); render(); return; }
-  if (name === "nearby-filters") {
-    showModal("Nearby filters", `<p class="muted">Filter sample posts in your selected community.</p><label class="form-label" ${state.nearby.scope === "building" ? "hidden" : ""}>Distance<select id="filter-distance"><option value=".5">Within ½ mi</option><option value="1">Within 1 mi</option><option value="2">Within 2 mi</option></select></label><label class="form-label">Category<select id="filter-category"><option value="all">All categories</option><option value="ingredients">Ingredients</option><option value="meals">Meals</option><option value="equipment">Equipment</option></select></label><label class="form-label">Offer<select id="filter-offer"><option value="all">Free / Exchange</option><option value="free">Free</option><option value="exchange">Exchange</option></select></label><button class="button primary full" id="apply-filters">Apply filters</button>`);
-    for (const key of ["distance", "category", "offer"]) $(`#filter-${key}`).value = state.nearby[key];
-    $("#apply-filters").onclick = () => {
-      for (const key of ["distance", "category", "offer"]) state.nearby[key] = $(`#filter-${key}`).value;
+  if (name === 'clear-nearby-filters') {
+    Object.assign(state.nearby, { type: 'all', category: 'all', offer: 'all', distance: 1 });
+    state.selectedPost = null;
+    render();
+    return;
+  }
+  if (name === 'nearby-filters') {
+    const building = state.nearby.scope !== 'neighborhood';
+    showModal('Nearby filters', `<p class="muted">Find what you need ${building ? 'in your building' : 'in the neighborhood'}.</p><label class="form-label">Post type<select id="filter-type"><option value="all">All posts</option><option value="available">Available</option><option value="wanted">Wanted</option><option value="meal_prep">Meal prep</option></select></label><label class="form-label" ${building ? 'hidden' : ''}>Distance<select id="filter-distance"><option value=".5">Within ½ mi</option><option value="1">Within 1 mi</option><option value="2">Within 2 mi</option></select></label><label class="form-label">Category<select id="filter-category"><option value="all">All categories</option><option value="ingredients">Ingredients</option><option value="meals">Meals</option><option value="equipment">Equipment</option></select></label><label class="form-label">Offer<select id="filter-offer"><option value="all">Free / Exchange</option><option value="free">Free</option><option value="exchange">Exchange</option></select></label><div class="modal-footer"><button class="button outline" id="clear-filters">Clear all</button><button class="button primary" id="apply-filters">Show listings</button></div>`);
+    const fields = ['type', 'distance', 'category', 'offer'];
+    for (const key of fields) $(`#filter-${key}`).value = state.nearby[key];
+    $('#clear-filters').onclick = () => {
+      for (const key of fields) $(`#filter-${key}`).value = key === 'distance' ? '1' : 'all';
+    };
+    $('#apply-filters').onclick = () => {
+      for (const key of fields) state.nearby[key] = $(`#filter-${key}`).value;
+      state.selectedPost = null;
       closeModal();
       render();
     };
