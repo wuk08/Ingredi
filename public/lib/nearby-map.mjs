@@ -64,7 +64,8 @@ export function mountVectorMap({ element, posts, selected, view, location, resid
     // Existing views use a 256px tile zoom; the vector renderer uses a 512px world.
     center: [initial.center[1], initial.center[0]], zoom: initial.zoom - 1,
     minZoom: 1, maxZoom: 18, maxPitch: 0,
-    scrollZoom: false, cooperativeGestures: touch,
+    // Double-taps/clicks must not change zoom while browsing listings.
+    scrollZoom: false, doubleClickZoom: false, cooperativeGestures: touch,
     dragRotate: false, touchPitch: false,
     attributionControl: false, fadeDuration: 0,
     renderWorldCopies: false

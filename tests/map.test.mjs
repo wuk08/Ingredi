@@ -64,7 +64,7 @@ test('map teardown ignores queued movement and resize callbacks after changing v
     resize(){assert.equal(removed,false,'queued resize must not touch a removed map');resizes++;},
     remove(){removed=true;handlers.get('moveend')?.();}
   };
-  const GL={Map:class{constructor(options){mapZoom=options.zoom;mapCenter=options.center;return map;}},NavigationControl:class{},AttributionControl:class{},Marker:class{setLngLat(){return this;}addTo(){return this;}remove(){removedMarkers++;}}};
+  const GL={Map:class{constructor(options){assert.equal(options.doubleClickZoom,false,'double taps and double clicks must not zoom the map');assert.equal(options.scrollZoom,false,'scrolling the page must not zoom the map');assert.notEqual(options.touchZoomRotate,false,'deliberate pinch zoom remains available');mapZoom=options.zoom;mapCenter=options.center;return map;}},NavigationControl:class{},AttributionControl:class{},Marker:class{setLngLat(){return this;}addTo(){return this;}remove(){removedMarkers++;}}};
   globalThis.document={baseURI:'https://ingredi.test/index.html',createElement:()=>({})};
   globalThis.ResizeObserver=class{constructor(callback){resizeCallback=callback;}observe(){}disconnect(){}};
   const dispose=mountVectorMap({element:{append(){},addEventListener(){},removeEventListener(){}},posts:[],location:[40,-74],onSelect(){},onView(value){views++;assert.deepEqual(value,{center:[40,-74],zoom:14});}},GL);

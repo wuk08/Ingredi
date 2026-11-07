@@ -17,6 +17,9 @@
 }
 * {
   box-sizing: border-box;
+  /* Block accidental double-tap zoom, including inside nested scroll areas.
+     Scrolling and deliberate pinch zoom remain available. */
+  touch-action: manipulation;
 }
 body {
   margin: 0;
@@ -40,10 +43,6 @@ button {
 button:disabled {
   cursor: default;
   opacity: .45;
-}
-button,
-a {
-  touch-action: manipulation;
 }
 button {
   border: 0;
