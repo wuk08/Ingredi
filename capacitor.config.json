@@ -1,0 +1,10 @@
+{
+  "appId": "com.ingredi.demo",
+  "appName": "Ingredi",
+  "webDir": "dist",
+  "ios": {
+    "contentInset": "never",
+    "preferredContentMode": "mobile",
+    "backgroundColor": "#f8f9f5"
+  }
+}

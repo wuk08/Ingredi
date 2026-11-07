@@ -1,0 +1,6 @@
+project_id = "ingredi"
+
+[functions.scan-receipt]
+# The handler verifies the bearer token with Auth /user before any work.
+# Supports current asymmetric Supabase Auth signing keys.
+verify_jwt = false

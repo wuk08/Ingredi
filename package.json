@@ -1,0 +1,28 @@
+{
+  "name": "ingredi",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/serve.mjs",
+    "start": "node scripts/serve.mjs",
+    "build": "node scripts/build.mjs",
+    "build:ios": "node scripts/build-ios.mjs",
+    "ios:prepare": "node scripts/prepare-ios.mjs",
+    "ios:open": "cap open ios",
+    "test": "node --test tests/*.test.mjs"
+  },
+  "engines": {
+    "node": ">=22.21.1"
+  },
+  "packageManager": "pnpm@11.25.0",
+  "dependencies": {
+    "@capacitor/camera": "8.2.6",
+    "@capacitor/core": "8.6.0",
+    "@capacitor/ios": "8.6.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "8.6.0",
+    "esbuild": "0.28.2"
+  }
+}
