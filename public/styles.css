@@ -3679,7 +3679,10 @@ button.button.small,
 .real-map-pin.selected { background: var(--green); }
 .real-map-pin .icon { width: 22px; height: 22px; }
 .map-scope { position: absolute; top: 44px; right: 10px; z-index: 3; background: #fffffff0; border-radius: 10px; padding: 6px 9px; font-size: 10px; color: #52634a; pointer-events: none; }
-.map-demo-reset { position: absolute; top: 86px; right: 10px; z-index: 3; font-size: 11px; box-shadow: 0 2px 8px #25382e11; }
+.location-gate { display: grid; justify-items: center; gap: 20px; padding: 48px 20px; text-align: center; background: var(--soft); border-radius: 20px; margin-top: 24px; }
+.location-gate > .icon { width: 42px; height: 42px; color: var(--green); }
+.location-gate p { max-width: 380px; font-size: 15px; color: #63745a; }
+.location-gate small { max-width: 350px; color: #738066; }
 .map-load-notice { position: absolute; top: 145px; left: 14px; right: 14px; z-index: 450; background: #fff8e9; color: #766244; padding: 12px; border-radius: 10px; font: 12px/1.5 -apple-system,sans-serif; }
 .map-load-notice[hidden] { display: none; }
 .group-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-top: 24px; }

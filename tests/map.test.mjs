@@ -1,12 +1,35 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {ANN_ARBOR,demoPosition,currentPosition} from '../public/lib/nearby-map.mjs';
+import {demoPosition,currentPosition,defaultView} from '../public/lib/nearby-map.mjs';
 import {seedCommunity} from '../public/lib/community.mjs';
 import {ensurePhotoPermissions,locationPermissions} from '../scripts/lib/ios-config.mjs';
+import {nearby} from '../public/features/community-views.mjs';
 
-test('sample pins stay deterministic in Ann Arbor regardless of viewer location',()=>{
-  for(const post of seedCommunity().posts){const p=demoPosition(post);assert.deepEqual(p,demoPosition(post));assert.ok(Math.abs(p[0]-ANN_ARBOR[0])<.03);assert.ok(Math.abs(p[1]-ANN_ARBOR[1])<.03);}
+test('Nearby gates both map and listings until location is available',()=>{
+  const html=nearby({state:{mapLocation:null,locating:false,locationError:'Permission denied'},d:seedCommunity()});
+  assert.match(html,/Permission denied/);assert.match(html,/Try again/);assert.doesNotMatch(html,/nearby-map-canvas|Ann Arbor|map-preview/);
+  const ready=nearby({state:{mapLocation:[40,-74],nearby:{view:'map'}},d:seedCommunity(),photoURL:()=>''});
+  assert.match(ready,/nearby-map-canvas/);assert.match(ready,/Your location/);assert.doesNotMatch(ready,/Ann Arbor|ann-arbor/);
+});
+
+test('sample pins follow the viewer location and remain deterministic',()=>{
+  const origins=[[40,-74],[34,-118],[89.99,179.99]];
+  for(const origin of origins)for(const post of seedCommunity().posts){
+    const p=demoPosition(post,origin);assert.deepEqual(p,demoPosition(post,origin));
+    assert.ok(Number.isFinite(p[0])&&Math.abs(p[0])<=90);assert.ok(Number.isFinite(p[1])&&Math.abs(p[1])<=180);
+    const rad=x=>x*Math.PI/180,dlat=rad(p[0]-origin[0]),dlon=rad(p[1]-origin[1]);
+    const a=Math.sin(dlat/2)**2+Math.cos(rad(origin[0]))*Math.cos(rad(p[0]))*Math.sin(dlon/2)**2;
+    assert.ok(Math.abs(2*3958.8*Math.asin(Math.sqrt(a))-post.distance)<.0001);
+  }
+  const post=seedCommunity().posts[0];assert.notDeepEqual(demoPosition(post,origins[0]),demoPosition(post,origins[1]));
+});
+test('Nearby has no map center or sample pins without a valid user location',()=>{
+  for(const invalid of [undefined,null,[],[NaN,0],[91,0],[0,181]]){
+    assert.throws(()=>defaultView(invalid),/Location is required/);
+    assert.throws(()=>demoPosition(seedCommunity().posts[0],invalid),/Location is required/);
+  }
+  assert.deepEqual(defaultView([0,0]),{center:[0,0],zoom:14});
 });
 test('browser location is requested only through the explicit adapter and uses a timeout',async()=>{
   let calls=0;const result=await currentPosition({native:false,geolocation:{getCurrentPosition(resolve,reject,options){calls++;assert.equal(options.timeout,10000);resolve({coords:{latitude:42.28,longitude:-83.74}});}}});assert.deepEqual(result,[42.28,-83.74]);assert.equal(calls,1);

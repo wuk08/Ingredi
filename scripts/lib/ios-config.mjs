@@ -4,8 +4,8 @@ export const photoPermissions = {
   NSPhotoLibraryAddUsageDescription:'Ingredi can save a receipt photo only when you choose to save it.',
 };
 export const locationPermissions = {
-  NSLocationWhenInUseUsageDescription:'Ingredi uses your location when you tap Use my location to center the Nearby map. Demo posts remain in Ann Arbor.',
-  NSLocationAlwaysAndWhenInUseUsageDescription:'Ingredi uses your location when you tap Use my location to center the Nearby map. Demo posts remain in Ann Arbor.',
+  NSLocationWhenInUseUsageDescription:'Ingredi uses your current location when you open Nearby to show the map around you. Sample listings are simulated and your location is not saved.',
+  NSLocationAlwaysAndWhenInUseUsageDescription:'Ingredi uses your current location when you open Nearby to show the map around you. Sample listings are simulated and your location is not saved.',
 };
 
 export function ensurePhotoPermissions(plist) {

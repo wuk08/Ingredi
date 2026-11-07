@@ -3,7 +3,7 @@ import { isNativeApp } from "./lib/capture.mjs";
 import { validateImage, MAX_IMAGE_BYTES, localDate } from "./lib/domain.mjs";
 import * as kitchen from "./lib/kitchen.mjs";
 import { DemoRepository, seedCommunity, filterPosts } from "./lib/community.mjs";
-import { mountMap, currentPosition, DEFAULT_VIEW } from './lib/nearby-map.mjs';
+import { mountMap, currentPosition, defaultView } from './lib/nearby-map.mjs';
 import { catalog, discover } from "./lib/recipes.mjs";
 import { Navigation, tabs } from "./lib/navigation.mjs";
 import { icon, escape, avatar, empty } from "./lib/ui.mjs";
@@ -74,11 +74,12 @@ function render() {
     const chat = d.conversations.find((c) => c.id === route.id);
     headerTitle = chat?.groupId ? d.groups.find((g) => g.id === chat.groupId)?.title : d.people[chat?.person]?.name || "Conversation";
   }
-  $("#app").innerHTML = `<aside class="sidebar"><button class="brand" data-tab="home">${icon("leaf")} ingredi<span>.</span></button><p class="brand-note">Cook. Share. Belong.</p><nav aria-label="Main navigation">${navButtons}</nav><div class="sidebar-bottom">${icon("leaf")}<h3>A little less waste.<br>A little more together.</h3><p>Good things happen<br>in your neighborhood.</p><span class="mode-badge">Demo community</span></div></aside><div class="workspace ${root ? "root-view" : "detail-view"} ${route.view === "nearby" ? "nearby-workspace" : ""}"><header class="app-header ${root ? "root-header" : "detail-header"}">${root ? `<button class="mobile-brand brand" data-tab="home">${icon("leaf")} ingredi<span>.</span></button><span class="desktop-location">${icon("pin")} ${escape(state.profile?.city || d.profile.city)}</span><button class="account-avatar" data-tab="my" aria-label="My profile">${avatar(state.profile?.display_name || d.profile.display_name)}</button>` : `<button class="icon-button" data-action="back" aria-label="Back">${icon("back")}</button><strong>${escape(headerTitle)}</strong>${route.view === "compose" ? '<button class="text-button" data-action="save-draft">Save draft</button>' : '<span class="header-spacer"></span>'}`}</header><main id="main-content" tabindex="-1" class="page ${route.view}-page">${state.error ? `<div class="error-banner" role="alert"><span>${escape(state.error)}</span><button class="icon-button" data-action="dismiss-error" aria-label="Dismiss error">${icon("close")}</button></div>` : ""}${state.storageError ? `<div class="error-banner" role="alert"><span>${escape(state.storageError)}</span><button class="text-button" data-action="retry-storage">Retry</button></div>` : ""}${root && ["home", "cook"].includes(route.view) ? `<div class="kitchen-status"><span class="status-dot ${state.signed ? "connected" : ""}"></span>${state.loading ? "Opening your kitchen…" : state.signed ? "Private fridge · account connected" : "Sample fridge · on this device"}${!state.signed ? '<button class="text-button" data-action="auth">Sign in</button>' : ""}</div>` : ""}${content}</main>${root ? `<nav class="mobile-nav" aria-label="Mobile navigation">${navButtons}</nav>` : ""}</div>`;
-  if (route.view === 'nearby' && state.nearby.view === 'map') {
+  $("#app").innerHTML = `<aside class="sidebar"><button class="brand" data-tab="home">${icon("leaf")} ingredi<span>.</span></button><p class="brand-note">Cook. Share. Belong.</p><nav aria-label="Main navigation">${navButtons}</nav><div class="sidebar-bottom">${icon("leaf")}<h3>A little less waste.<br>A little more together.</h3><p>Good things happen<br>in your neighborhood.</p><span class="mode-badge">Demo community</span></div></aside><div class="workspace ${root ? "root-view" : "detail-view"} ${route.view === "nearby" ? "nearby-workspace" : ""}"><header class="app-header ${root ? "root-header" : "detail-header"}">${root ? `<button class="mobile-brand brand" data-tab="home">${icon("leaf")} ingredi<span>.</span></button><span class="desktop-location">${icon("pin")} ${escape(route.view==='nearby'?(state.mapLocation?'Your location':'Location required'):(state.profile?.city || d.profile.city))}</span><button class="account-avatar" data-tab="my" aria-label="My profile">${avatar(state.profile?.display_name || d.profile.display_name)}</button>` : `<button class="icon-button" data-action="back" aria-label="Back">${icon("back")}</button><strong>${escape(headerTitle)}</strong>${route.view === "compose" ? '<button class="text-button" data-action="save-draft">Save draft</button>' : '<span class="header-spacer"></span>'}`}</header><main id="main-content" tabindex="-1" class="page ${route.view}-page">${state.error ? `<div class="error-banner" role="alert"><span>${escape(state.error)}</span><button class="icon-button" data-action="dismiss-error" aria-label="Dismiss error">${icon("close")}</button></div>` : ""}${state.storageError ? `<div class="error-banner" role="alert"><span>${escape(state.storageError)}</span><button class="text-button" data-action="retry-storage">Retry</button></div>` : ""}${root && ["home", "cook"].includes(route.view) ? `<div class="kitchen-status"><span class="status-dot ${state.signed ? "connected" : ""}"></span>${state.loading ? "Opening your kitchen…" : state.signed ? "Private fridge · account connected" : "Sample fridge · on this device"}${!state.signed ? '<button class="text-button" data-action="auth">Sign in</button>' : ""}</div>` : ""}${content}</main>${root ? `<nav class="mobile-nav" aria-label="Mobile navigation">${navButtons}</nav>` : ""}</div>`;
+  if (route.view === 'nearby' && state.nearby.view === 'map' && state.mapLocation) {
     const posts=filterPosts(d.posts,state.nearby);
-    disposeMap=mountMap({element:$('#nearby-map-canvas'),posts,selected:state.selectedPost||posts[0]?.id,view:state.mapView||DEFAULT_VIEW,location:state.mapLocation,onSelect:id=>{state.selectedPost=id;render();},onView:view=>{state.mapView=view;}});
+    disposeMap=mountMap({element:$('#nearby-map-canvas'),posts,selected:state.selectedPost||posts[0]?.id,view:state.mapView||defaultView(state.mapLocation),location:state.mapLocation,onSelect:id=>{state.selectedPost=id;render();},onView:view=>{state.mapView=view;}});
   }
+  if(route.view==='nearby'&&!state.locationAttempted)queueMicrotask(locate);
   if (route.view === "chat") requestAnimationFrame(() => {
     $(".chat-messages")?.lastElementChild?.scrollIntoView({ block: "nearest" });
   });
@@ -160,6 +161,20 @@ async function refresh() {
     }
   }
 }
+async function locate() {
+  if(state.locating)return;
+  state.locationAttempted=true;state.locationError='';state.locating=true;
+  const generation=identityGeneration;render();
+  try {
+    const location=await currentPosition();
+    if(generation!==identityGeneration)return;
+    state.mapLocation=location;state.mapView=defaultView(location);
+  } catch {
+    if(generation!==identityGeneration)return;
+    state.mapLocation=null;state.mapView=null;
+    state.locationError='Location is unavailable. Allow location access for Ingredi in your phone settings, then tap Try again.';
+  } finally {if(generation===identityGeneration){state.locating=false;render();}}
+}
 async function loadCommunity() {
   const repo = new DemoRepository(getSession()?.user.id || "anonymous-demo");
   state.repo = repo;
@@ -181,6 +196,9 @@ async function sessionChanged() {
   state.scans = [];
   state.profile = null;
   state.mapLocation = null;
+  state.locationAttempted = false;
+  state.locating = false;
+  state.locationError = "";
   state.mapView = null;
   state.staged = [];
   state.composer = null;
@@ -280,26 +298,7 @@ async function action(name) {
     render();
     return;
   }
-  if (name === "center-map") {
-    if(state.locating)return;
-    state.locating=true;render();
-    const generation=identityGeneration;
-    try {
-      const location=await currentPosition();
-      if(generation!==identityGeneration)return;
-      state.mapLocation=location;state.mapView={center:location,zoom:15};
-      toast('Centered on your location. Demo posts stay in Ann Arbor.');
-    } catch {
-      if(generation!==identityGeneration)return;
-      state.mapView=DEFAULT_VIEW;state.mapLocation=null;
-      toast('Location unavailable or denied. Showing the Ann Arbor demo.');
-    } finally {state.locating=false;render();}
-    return;
-  }
-  if(name==='ann-arbor') {
-    state.mapView=DEFAULT_VIEW;state.mapLocation=null;state.selectedPost=null;render();
-    return;
-  }
+  if(name==='center-map'){await locate();return;}
   if (name === "nearby-filters") {
     showModal("Nearby filters", `<p class="muted">Filter the sample neighborhood.</p><label class="form-label">Distance<select id="filter-distance"><option value=".5">Within ½ mi</option><option value="1">Within 1 mi</option><option value="2">Within 2 mi</option></select></label><label class="form-label">Category<select id="filter-category"><option value="all">All categories</option><option value="ingredients">Ingredients</option><option value="meals">Meals</option><option value="equipment">Equipment</option></select></label><label class="form-label">Offer<select id="filter-offer"><option value="all">Free / Exchange</option><option value="free">Free</option><option value="exchange">Exchange</option></select></label><button class="button primary full" id="apply-filters">Apply filters</button>`);
     for (const key of ["distance", "category", "offer"]) $(`#filter-${key}`).value = state.nearby[key];
