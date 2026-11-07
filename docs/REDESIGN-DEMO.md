@@ -51,21 +51,22 @@ For someone else's Available post, **Request item** opens/reuses the conversatio
 | Signed-in fridge and receipt scans | Existing authenticated Supabase APIs, private uploads, and duplicate-safe receipt confirmation |
 | Anonymous sample fridge | Existing `ingredi.local-pantry` device storage |
 | Community posts, photos, drafts, messages, groups | IndexedDB `ingredi-community`, version 1; one record per account UUID or `anonymous-demo` |
+| Residence/student setup and sample ID state | The same identity-scoped local record; inactive residences retain separate activity archives |
 | Recipe bookmarks and preferences | The same identity-scoped local record |
 | Signed-in profile name/city | Existing permitted profile columns; reward columns are never written |
 | Demo impact | Local illustrative counters only; no backend reward awards |
 
 **My → Settings → Reset community demo** restores the chosen identity's sample community, bookmarks, preferences, and impact. It leaves authentication and fridge data intact. The confirmation explains what resets.
 
-Nearby uses locally bundled Leaflet 1.9.4 and OpenStreetMap street tiles. Opening Nearby requests the user's current location and centers the map there. There is no default city, simulated city button, or fallback map center. Denied, timed-out, or unavailable location displays an Enable location / Try again screen; map and list content remain gated until a real fix is available. The recenter button requests a fresh fix. Coordinates are kept only in memory and cleared when the account changes, never saved to community storage or Supabase. The map provider receives tile requests for the displayed area. Attribution remains visible. Tiles require internet access.
+Nearby uses locally bundled Leaflet 1.9.4 and OpenStreetMap street tiles. [Residence setup and sample student verification](RESIDENCE-DEMO.md) now provide explicit address/GPS lookup, self-confirmed buildings, a default My building feed, opt-in neighborhood visibility, and a fake-card check before student exchanges. Opening Nearby never requests GPS: maps center on the saved residence, and manually entered buildings work in list view without coordinates. Only the Use my current location setup button requests a foreground location fix. Raw fixes are temporary; confirmed building metadata is stored locally for the selected identity. Map tiles and live address lookup require internet access.
 
-Community listings remain sample data. Their simulated marker positions are deterministic offsets around the viewer's location, matching the displayed sample distances; they do not represent actual local people or pickups. Community messages, posts, requests, and joins never reach real neighbors. No social sign-in, grocery-photo recognition, custom camera preview, push notifications, or real multi-user messaging is included.
+Community listings remain sample data. Their simulated marker positions are deterministic offsets around the saved residence, matching the displayed sample distances; they do not represent actual local people or pickups. Community messages, posts, requests, and joins never reach real neighbors. No social sign-in, grocery-photo recognition, custom camera preview, push notifications, or real multi-user messaging is included.
 
 This update adds the native Capacitor Geolocation plugin. On the Mac, run the pinned dependency install, then `ios:prepare` to register the plugin and location usage descriptions before rebuilding in Xcode. No background location watch is used.
 
 ## Verification
 
-- Original receipt/domain/native tests retained; 14 community/discovery/navigation tests and 7 map/location tests added (46 total).
+- Original receipt/domain/native tests retained; community/discovery/navigation, map/location, and residence tests (58 total).
 - The browser walkthrough checks actual IndexedDB draft/photo restoration, linked post requests, sample replies, handoff rewards/ratings, membership persistence, recipe bookmarks, missing-ingredient search, and reset preserving the fridge.
 - Phone layouts checked at 375, 390, and 430px, with a desktop sidebar layout. Map controls sit above the selected post card and navigation; detail screens reserve space for bottom actions.
 - Web and iOS frontend builds are checked independently from the native Xcode build.

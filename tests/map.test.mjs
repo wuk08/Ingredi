@@ -2,15 +2,19 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {demoPosition,currentPosition,defaultView} from '../public/lib/nearby-map.mjs';
-import {seedCommunity} from '../public/lib/community.mjs';
+import {seedCommunity,ensureResidenceState,actions,communityView} from '../public/lib/community.mjs';
 import {ensurePhotoPermissions,locationPermissions} from '../scripts/lib/ios-config.mjs';
 import {nearby} from '../public/features/community-views.mjs';
 
-test('Nearby gates both map and listings until location is available',()=>{
+test('Nearby requires residence setup, then uses its saved location without a device fix',()=>{
   const html=nearby({state:{mapLocation:null,locating:false,locationError:'Permission denied'},d:seedCommunity()});
-  assert.match(html,/Permission denied/);assert.match(html,/Try again/);assert.doesNotMatch(html,/nearby-map-canvas|Ann Arbor|map-preview/);
-  const ready=nearby({state:{mapLocation:[40,-74],nearby:{view:'map'}},d:seedCommunity(),photoURL:()=>''});
-  assert.match(ready,/nearby-map-canvas/);assert.match(ready,/Your location/);assert.doesNotMatch(ready,/Ann Arbor|ann-arbor/);
+  assert.match(html,/Set up my residence/);assert.doesNotMatch(html,/nearby-map-canvas|Ann Arbor|map-preview/);
+  const data=ensureResidenceState(seedCommunity());actions.student(data,{isStudent:false});actions.residence(data,{name:'Home Building',address:'100 Test Street, Test City',kind:'apartment',center:[40,-74]});
+  const ready=nearby({state:{mapLocation:null,nearby:{view:'map'}},d:communityView(data),photoURL:()=>''});
+  assert.match(ready,/nearby-map-canvas/);assert.match(ready,/Your residence/);assert.doesNotMatch(ready,/Use my location|Ann Arbor|ann-arbor/);
+  actions.residence(data,{name:'Manual Building',address:'200 Test Street, Test City',kind:'apartment'});
+  const manual=nearby({state:{nearby:{view:'map',scope:'building'}},d:communityView(data),photoURL:()=>''});
+  assert.match(manual,/nearby-list/);assert.match(manual,/Same building/);assert.doesNotMatch(manual,/nearby-map-canvas/);
 });
 
 test('sample pins follow the viewer location and remain deterministic',()=>{

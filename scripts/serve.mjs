@@ -13,9 +13,10 @@ const server = http.createServer(async (req,res) => {
     res.setHeader('X-Content-Type-Options','nosniff');
     res.setHeader('Referrer-Policy','strict-origin-when-cross-origin');
     res.setHeader('Cache-Control','no-store');
-    res.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob: data: https://tile.openstreetmap.org; connect-src 'self' https://*.supabase.co; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'");
+    const geocoderUrl = process.env.GEOCODER_URL || config.geocoderUrl;
+    res.setHeader('Content-Security-Policy',`default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob: data: https://tile.openstreetmap.org; connect-src 'self' https://*.supabase.co ${new URL(geocoderUrl).origin}; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'`);
     if (path === '/config.js') {
-      res.writeHead(200,{'Content-Type':'text/javascript'}).end(`export const config = ${JSON.stringify({supabaseUrl: process.env.SUPABASE_URL || config.supabaseUrl, publishableKey: process.env.SUPABASE_PUBLISHABLE_KEY || config.publishableKey})};`); return;
+      res.writeHead(200,{'Content-Type':'text/javascript'}).end(`export const config = ${JSON.stringify({supabaseUrl: process.env.SUPABASE_URL || config.supabaseUrl, publishableKey: process.env.SUPABASE_PUBLISHABLE_KEY || config.publishableKey, geocoderUrl})};`); return;
     }
     const data = await readFile(file);
     res.writeHead(200,{'Content-Type':`${types[extname(file)] || 'application/octet-stream'}; charset=utf-8`}).end(data);

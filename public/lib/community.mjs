@@ -1,4 +1,5 @@
 import { localDate } from "./domain.mjs";
+import { activeResidence, setupComplete, needsStudentCheck, normalizeResidence } from './residence.mjs';
 function seedCommunity(now = /* @__PURE__ */ new Date()) {
   const people = { you: { name: "Jason Park", city: "Ann Arbor, MI" }, jack: { name: "Jack Lee", distance: 0.2 }, mason: { name: "Mason Mei", distance: 0.4 }, ari: { name: "Ari Kim", distance: 0.6 }, dana: { name: "Dana P.", distance: 0.8 }, leo: { name: "Leo S.", distance: 0.9 } };
   const post = (id, owner, title, type, category, offer, distance, food, quantity = 1) => ({ id, owner, title, type, category, offer, distance, food, quantity, unit: "item", description: "A little extra to share with the neighborhood. Happy to hand off at my building lobby.", pickup: "Today, 5–8 PM · building lobby", expires_on: localDate(3), status: "active", photos: [], created_at: now.toISOString() });
@@ -20,9 +21,68 @@ function seedCommunity(now = /* @__PURE__ */ new Date()) {
     impact: { points: 1240, shares: 18, meals: 27, savings: 86 }
   };
 }
-function filterPosts(posts, { search = "", type = "all", category = "all", offer = "all", distance = 1, own = false } = {}) {
+function filterPosts(posts, { search = "", type = "all", category = "all", offer = "all", distance = 1, own = false, scope, residenceId } = {}) {
   const query = search.trim().toLowerCase();
-  return posts.filter((p) => (own ? p.owner === "you" : p.status === "active" || p.status === "reserved") && (!query || `${p.title} ${p.description} ${p.food}`.toLowerCase().includes(query)) && (type === "all" || p.type === type) && (category === "all" || p.category === category) && (offer === "all" || p.offer === offer) && p.distance <= Number(distance)).sort((a, b) => a.distance - b.distance);
+  return posts.filter((p) => (own ? p.owner === "you" : p.status === "active" || p.status === "reserved") && (!query || `${p.title} ${p.description} ${p.food}`.toLowerCase().includes(query)) && (type === "all" || p.type === type) && (category === "all" || p.category === category) && (offer === "all" || p.offer === offer) && (scope !== 'building' || p.residenceId === residenceId) && (scope !== 'neighborhood' || p.visibility === 'neighborhood') && (scope === 'building' || p.distance <= Number(distance))).sort((a, b) => a.distance - b.distance);
+}
+const communityKeys = ['people', 'posts', 'groups', 'conversations', 'draft', 'completions', 'ratings', 'impact'];
+function ensureResidenceState(data) {
+  data.residences ||= [];
+  data.activeResidenceId ||= null;
+  data.communityArchives ||= {};
+  data.student ||= { isStudent: null, school: '', verification: 'required' };
+  data.onboardingSkipped ??= false;
+  return data;
+}
+function canAccess(data, record) {
+  const home = activeResidence(data);
+  return Boolean(setupComplete(data) && record && (record.residenceId === home.id || (record.visibility === 'neighborhood' && home.center)));
+}
+function conversationParent(data, chat) {
+  return chat?.postId ? data.posts.find(p => p.id === chat.postId) : data.groups.find(g => g.id === chat?.groupId);
+}
+// Detail routes and inboxes use the same audience rules as feeds.
+function communityView(data) {
+  const posts = data.posts.filter(p => canAccess(data, p));
+  const groups = data.groups.filter(g => canAccess(data, g));
+  const conversations = data.conversations.filter(c => canAccess(data, conversationParent(data, c)));
+  return { ...data, posts, groups, conversations };
+}
+function stampCommunity(data, home, legacy = false) {
+  for (const p of data.posts) {
+    p.residenceId = p.owner === 'you' ? home.id : `sample:${home.id}:${p.owner}`;
+    p.visibility = 'neighborhood';
+  }
+  for (const g of data.groups) Object.assign(g, { residenceId: `sample:${home.id}:group`, visibility: 'neighborhood' });
+  // New buildings receive unique sample posts so old deep links cannot resolve in a different building.
+  if (!legacy) {
+    const postIds = new Map(data.posts.map(p => [p.id, uid()]));
+    const groupIds = new Map(data.groups.map(g => [g.id, uid()]));
+    for (const p of data.posts) { p.id = postIds.get(p.id); if (p.groupId) p.groupId = groupIds.get(p.groupId); }
+    for (const g of data.groups) g.id = groupIds.get(g.id);
+    for (const c of data.conversations) { c.id = uid(); if (c.postId) c.postId = postIds.get(c.postId); if (c.groupId) c.groupId = groupIds.get(c.groupId); }
+  }
+  const building = seedCommunity();
+  const group = building.groups[0];
+  const groupId = uid();
+  data.groups.unshift({ ...group, id: groupId, residenceId: home.id, visibility: 'building', location: `${home.name} lobby · sample meetup` });
+  for (const source of building.posts.slice(0, 3)) data.posts.unshift({ ...source, id: uid(), ...(source.groupId ? { groupId } : {}), residenceId: home.id, visibility: 'building', distance: 0, pickup: `${home.name} lobby · today, 5–8 PM (sample)` });
+  // The linked legacy meal-swap keeps its original identifiers and current membership.
+  for (const p of data.posts) if (p.groupId) {
+    const g = data.groups.find(item => item.id === p.groupId);
+    if (g) Object.assign(g, { residenceId: p.residenceId, visibility: p.visibility });
+  }
+  if (data.draft) data.draft.visibility ||= 'building';
+}
+function guardCommunityAction(data, action, value) {
+  if (!['saveDraft', 'publish', 'request', 'read', 'send', 'join', 'complete', 'rate', 'cancel'].includes(action)) return;
+  if (!setupComplete(data)) throw new Error('Choose your residence and student status to use your community.');
+  if (['publish', 'request', 'send', 'join', 'complete', 'rate'].includes(action) && needsStudentCheck(data)) throw new Error('Complete the sample student ID check before exchanging.');
+  let parent;
+  if (['request', 'complete', 'cancel', 'rate'].includes(action)) parent = data.posts.find(p => p.id === (action === 'rate' ? value.id : value));
+  if (action === 'join') parent = data.groups.find(g => g.id === value.id);
+  if (['read', 'send'].includes(action)) parent = conversationParent(data, data.conversations.find(c => c.id === (action === 'read' ? value : value.id)));
+  if (!['saveDraft', 'publish'].includes(action) && !canAccess(data, parent)) throw new Error('This activity is not available in your current residence community.');
 }
 const uid = () => globalThis.crypto.randomUUID();
 const timestamp = () => (/* @__PURE__ */ new Date()).toISOString();
@@ -40,19 +100,56 @@ function ensureConversation(data, post, person) {
   return chat;
 }
 const actions = {
+  student(data, { isStudent, school = '' }) {
+    if (typeof isStudent !== 'boolean' || (isStudent && (!school.trim() || school.trim().length > 120))) throw new Error('Choose your student status and enter your school (up to 120 characters).');
+    const previous = data.student;
+    data.student = { isStudent, school: isStudent ? school.trim() : '', verification: !isStudent ? 'not_required' : previous?.isStudent && previous.school === school.trim() && previous.verification === 'demo_complete' ? 'demo_complete' : 'required' };
+  },
+  skipSetup(data) { data.onboardingSkipped = true; },
+  checkStudent(data) {
+    if (!setupComplete(data) || !data.student.isStudent) throw new Error('Complete your student and residence setup first.');
+    data.student.verification = 'demo_complete';
+  },
+  residence(data, value) {
+    if (typeof data.student?.isStudent !== 'boolean') throw new Error('Choose your student status first.');
+    const home = normalizeResidence(value), previous = activeResidence(data);
+    if (value.updateResidenceId && value.updateResidenceId !== previous?.id) throw new Error('Your active residence changed. Open setup again.');
+    const existing = data.residences.find(r => r.id === home.id || (home.lookupId && r.lookupId === home.lookupId));
+    if (value.updateResidenceId && existing && existing.id !== value.updateResidenceId) throw new Error('This building is already saved. Choose it under Change residence instead.');
+    home.id = value.updateResidenceId || existing?.id || home.id;
+    if (previous && previous.id !== home.id) data.communityArchives[previous.id] = Object.fromEntries(communityKeys.map(key => [key, data[key]]));
+    if (previous?.id !== home.id) {
+      const archive = data.communityArchives[home.id];
+      if (archive) for (const key of communityKeys) data[key] = archive[key];
+      else if (previous) {
+        const seeded = seedCommunity();
+        for (const key of communityKeys) data[key] = seeded[key];
+        stampCommunity(data, home);
+      } else stampCommunity(data, home, true);
+    }
+    data.residences = [...data.residences.filter(r => r.id !== home.id), home];
+    data.activeResidenceId = home.id;
+    data.onboardingSkipped = false;
+    data.people.you.name = data.profile.display_name;
+    return home.id;
+  },
   saveDraft(data, draft) {
     data.draft = draft;
     return null;
   },
   publish(data, draft) {
+    const home = activeResidence(data);
+    const visibility = draft.visibility || 'building';
+    if (!['building', 'neighborhood'].includes(visibility)) throw new Error('Choose who can see your post.');
+    if (home && visibility === 'neighborhood' && !home.center) throw new Error('Add a map location to your residence before sharing with the neighborhood.');
     if (!draft.title?.trim() || draft.title.trim().length > 120) throw new Error("Add a title of up to 120 characters.");
     if (!["available", "wanted", "meal_prep"].includes(draft.type) || !["ingredients", "meals", "equipment"].includes(draft.category) || !["free", "exchange"].includes(draft.offer)) throw new Error("Choose a post type, category, and offer.");
     if (!Number.isFinite(Number(draft.quantity)) || Number(draft.quantity) <= 0) throw new Error("Choose a quantity greater than zero.");
     if (!draft.pickup?.trim()) throw new Error("Add a pickup or meetup location and time.");
-    const post = { ...draft, id: uid(), title: draft.title.trim(), description: draft.description?.trim() || "", quantity: Number(draft.quantity), owner: "you", distance: 0.1, status: "active", food: draft.title, created_at: timestamp(), photos: (draft.photos || []).slice(0, 5) };
+    const post = { ...draft, id: uid(), title: draft.title.trim(), description: draft.description?.trim() || "", quantity: Number(draft.quantity), owner: "you", residenceId: home?.id, visibility, distance: 0, status: "active", food: draft.title, created_at: timestamp(), photos: (draft.photos || []).slice(0, 5) };
     if (post.type === "meal_prep") {
       const dish = draft.dish?.trim() || "My dish";
-      const group = { id: uid(), title: post.title, description: post.description || "Cook at home, then share a meal with your neighbors.", date: draft.date || localDate(2), time: draft.time || "5 PM", location: post.pickup, capacity: 4, members: [{ person: "you", dish, host: true }], dishes: [...new Set([dish, "Vegetable curry", "Rice bowl", "Seasonal salad", "Roast vegetables"])].slice(0, 4) };
+      const group = { id: uid(), residenceId: post.residenceId, visibility, title: post.title, description: post.description || "Cook at home, then share a meal with your neighbors.", date: draft.date || localDate(2), time: draft.time || "5 PM", location: post.pickup, capacity: 4, members: [{ person: "you", dish, host: true }], dishes: [...new Set([dish, "Vegetable curry", "Rice bowl", "Seasonal salad", "Roast vegetables"])].slice(0, 4) };
       post.groupId = group.id;
       data.groups.unshift(group);
     } else {
@@ -186,21 +283,24 @@ class DemoRepository {
     this.data = null;
   }
   async load() {
-    const saved = await this.storage.update(this.scope, seedCommunity, () => {
-    });
+    const saved = await this.storage.update(this.scope, seedCommunity, ensureResidenceState);
     this.data = saved.data;
     return this.data;
   }
   async run(action, value) {
     if (!actions[action]) throw new Error("Unknown demo action.");
-    const saved = await this.storage.update(this.scope, seedCommunity, (data) => actions[action](data, value));
+    const saved = await this.storage.update(this.scope, seedCommunity, (data) => {
+      ensureResidenceState(data);
+      guardCommunityAction(data, action, value);
+      return actions[action](data, value);
+    });
     this.data = saved.data;
     return saved.result;
   }
   async reset() {
     const saved = await this.storage.update(this.scope, seedCommunity, (data) => {
       for (const key of Object.keys(data)) delete data[key];
-      Object.assign(data, seedCommunity());
+      Object.assign(data, ensureResidenceState(seedCommunity()));
     });
     this.data = saved.data;
   }
@@ -210,5 +310,7 @@ export {
   IndexedDBStorage,
   actions,
   filterPosts,
+  communityView,
+  ensureResidenceState,
   seedCommunity
 };

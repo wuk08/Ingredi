@@ -4,8 +4,8 @@ export const photoPermissions = {
   NSPhotoLibraryAddUsageDescription:'Ingredi can save a receipt photo only when you choose to save it.',
 };
 export const locationPermissions = {
-  NSLocationWhenInUseUsageDescription:'Ingredi uses your current location when you open Nearby to show the map around you. Sample listings are simulated and your location is not saved.',
-  NSLocationAlwaysAndWhenInUseUsageDescription:'Ingredi uses your current location when you open Nearby to show the map around you. Sample listings are simulated and your location is not saved.',
+  NSLocationWhenInUseUsageDescription:'When you tap Use my current location, Ingredi sends a one-time location to Photon to suggest your residence. Your confirmed building is saved on this device; your device location is not saved. Neighbors are simulated.',
+  NSLocationAlwaysAndWhenInUseUsageDescription:'Ingredi only uses a one-time foreground location when you choose to find your residence. The lookup goes to Photon; only your confirmed building is saved on this device. No background tracking is used.',
 };
 
 export function ensurePhotoPermissions(plist) {
@@ -15,7 +15,8 @@ export function ensurePhotoPermissions(plist) {
     plist=plist.replace(pattern,'');
     const rootEnd=plist.lastIndexOf('</dict>');
     if(rootEnd<0)throw new Error('The iOS Info.plist has no root dictionary.');
-    const entry=`\t<key>${key}</key>\n\t<string>${existing || description}</string>\n`;
+    const updated = key in locationPermissions && existing?.includes('when you open Nearby') ? description : existing || description;
+    const entry=`\t<key>${key}</key>\n\t<string>${updated}</string>\n`;
     plist=plist.slice(0,rootEnd).trimEnd()+'\n'+entry+plist.slice(rootEnd);
   }
   return plist;

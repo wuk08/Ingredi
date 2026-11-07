@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { DemoRepository, actions, filterPosts, seedCommunity } from '../public/lib/community.mjs';
+import { DemoRepository, actions, filterPosts, seedCommunity, ensureResidenceState } from '../public/lib/community.mjs';
 import { catalog,discover } from '../public/lib/recipes.mjs';
 import { parseRoute } from '../public/lib/navigation.mjs';
 
@@ -8,7 +8,7 @@ import { parseRoute } from '../public/lib/navigation.mjs';
 class MemoryStorage {
   rows=new Map();
   queue=Promise.resolve();
-  update(scope,initial,mutate){const next=this.queue.catch(()=>{}).then(()=>{const data=structuredClone(this.rows.get(scope)||initial());const result=mutate(data);this.rows.set(scope,structuredClone(data));return {data,result};});this.queue=next;return next;}
+  update(scope,initial,mutate){const next=this.queue.catch(()=>{}).then(()=>{let data=structuredClone(this.rows.get(scope));if(!data){data=ensureResidenceState(initial());actions.student(data,{isStudent:false});actions.residence(data,{name:'Test apartments',address:'100 Test Street, Test City',kind:'apartment',center:[40,-74]});}const result=mutate(data);this.rows.set(scope,structuredClone(data));return {data,result};});this.queue=next;return next;}
 }
 const draft=()=>({type:'available',category:'ingredients',offer:'free',title:'Three ripe avocados',description:'A sample test listing.',quantity:3,pickup:'Sample lobby, 5–8 PM',photos:[]});
 

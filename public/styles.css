@@ -3678,11 +3678,52 @@ button.button.small,
 .real-map-pin { display: grid; place-items: center; border: 3px solid white; border-radius: 50%; background: #829871; color: white; box-shadow: 0 2px 8px #25382e44; }
 .real-map-pin.selected { background: var(--green); }
 .real-map-pin .icon { width: 22px; height: 22px; }
+.map-canvas .real-map-pin { display: grid; place-items: center; font-size: 16px; font-weight: 700; }
 .map-scope { position: absolute; top: 44px; right: 10px; z-index: 3; background: #fffffff0; border-radius: 10px; padding: 6px 9px; font-size: 10px; color: #52634a; pointer-events: none; }
 .location-gate { display: grid; justify-items: center; gap: 20px; padding: 48px 20px; text-align: center; background: var(--soft); border-radius: 20px; margin-top: 24px; }
 .location-gate > .icon { width: 42px; height: 42px; color: var(--green); }
 .location-gate p { max-width: 380px; font-size: 15px; color: #63745a; }
 .location-gate small { max-width: 350px; color: #738066; }
+.residence-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+.residence-heading h1 { font-size: clamp(22px, 4vw, 30px); overflow-wrap: anywhere; }
+.residence-heading small { display: block; color: #63745a; margin-top: 6px; }
+.residence-heading .text-button { flex-shrink: 0; }
+.residence-scope { margin: 0 0 18px; }
+.residence-choices { display: grid; gap: 12px; margin: 12px 0 20px; }
+.residence-choices label { display: flex; align-items: center; gap: 12px; border: 1px solid #cbd6c6; border-radius: 14px; padding: 16px; cursor: pointer; font-size: 15px; }
+.residence-choices label:has(input:checked) { border-color: var(--green); background: var(--soft); }
+.residence-choices label:has(input:disabled) { opacity: .55; cursor: default; }
+.residence-choices input[type=radio] { width: 20px; height: 20px; min-height: 20px; padding: 0; flex-shrink: 0; accent-color: var(--green); }
+.residence-or { display: block; text-align: center; color: #63745a; margin: 20px 0; font-size: 14px; }
+.residence-notice { background: var(--soft); padding: 14px; margin-top: 16px; border-radius: 12px; font-size: 14px; line-height: 1.5; }
+.residence-results { display: grid; gap: 10px; margin: 16px 0; }
+.residence-result { display: flex; align-items: center; gap: 12px; width: 100%; padding: 16px; text-align: left; border: 1px solid #dce3d7; border-radius: 14px; background: #fff; }
+.residence-result > span:has(strong) { flex: 1; min-width: 0; }
+.residence-result strong, .residence-result small { display: block; overflow-wrap: anywhere; }
+.residence-result small { color: #63745a; margin-top: 5px; line-height: 1.4; }
+.residence-result > .icon, .residence-result > span > .icon { flex-shrink: 0; }
+.residence-result:hover { background: var(--soft); }
+.check-row { display: flex; align-items: flex-start; gap: 12px; margin: 20px 0; font-size: 14px; line-height: 1.5; }
+.check-row input { flex-shrink: 0; margin-top: 2px; }
+.student-check-nudge { width: 100%; padding: 13px 16px; margin-bottom: 16px; text-align: left; line-height: 1.4; background: #f2f5e9; color: var(--green); border: 1px solid #dbe2cb; border-radius: 12px; font-size: 13px; }
+.same-building-filter { align-self: center; color: #63745a; font-size: 13px; padding: 8px 0; }
+.sample-student-id { display: grid; gap: 18px; border: 1px solid #cad5c3; background: linear-gradient(130deg, #e8f0df, #fff); border-radius: 18px; padding: 24px; margin: 24px 0; color: var(--green); box-shadow: 0 6px 20px #25382e0c; }
+.sample-student-id > strong { font-size: 24px; }
+.sample-student-id > span:last-child { font-size: 12px; color: #63745a; }
+.sample-id-person { display: flex; align-items: center; gap: 18px; }
+.sample-id-person > .icon { width: 52px; height: 52px; padding: 10px; background: #d9e4cd; border-radius: 12px; }
+.sample-id-person small { display: block; color: #63745a; margin-top: 5px; }
+.verification-result { display: grid; gap: 22px; text-align: center; padding: 20px 0; }
+.verification-result > .icon { width: 56px; height: 56px; color: var(--green); justify-self: center; }
+.form-label[hidden] { display: none; }
+@media (max-width: 760px) {
+  .residence-heading { margin-bottom: 12px; }
+  .residence-heading h1 { font-size: 23px; }
+  .residence-heading .eyebrow { font-size: 9px; }
+  .residence-heading small { font-size: 10px; }
+  .residence-scope { margin-bottom: 12px; }
+  .student-check-nudge { margin-bottom: 12px; padding: 10px 12px; font-size: 12px; }
+}
 .map-load-notice { position: absolute; top: 145px; left: 14px; right: 14px; z-index: 450; background: #fff8e9; color: #766244; padding: 12px; border-radius: 10px; font: 12px/1.5 -apple-system,sans-serif; }
 .map-load-notice[hidden] { display: none; }
 .group-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-top: 24px; }
