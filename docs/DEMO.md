@@ -1,5 +1,7 @@
 # 60–90 second technical demo
 
+For the five-tab product walkthrough, see [REDESIGN-DEMO.md](REDESIGN-DEMO.md). The sequence below focuses on the live receipt backend.
+
 Before presenting, sign in, test the connection, and run a practice scan. Use the synthetic image at `public/sample-receipt.png` if you do not want to show a real purchase. Keep an empty test fridge ready.
 
 1. **0–10 seconds:** “Ingredi helps you cook what you have and waste less. This is our working backend demo, separate from the Figma prototype.”

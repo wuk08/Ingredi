@@ -1,6 +1,8 @@
 # Ingredi
 
-A working hackathon demo: receipt photo → ingredient review → private virtual fridge → recipe matches.
+A five-tab competition demo: cook from your private fridge, discover sample neighbors, share extra food, and join meal swaps. The receipt → review → fridge pipeline uses the existing live backend; community activity is an interactive, clearly labeled local demo.
+
+See [the redesigned demo walkthrough](docs/REDESIGN-DEMO.md) for the three presentation journeys, data boundaries, and verification notes.
 
 ## Run
 
@@ -29,13 +31,18 @@ For ongoing Windows/Mac development, follow [the GitHub sync workflow](docs/SYNC
 
 ## What works
 
+- Home, Cook, Nearby, Message, and My, with phone navigation and a desktop sidebar.
+- Recipe search, preference chips, random suggestions, saved recipes, ingredients/steps, and missing-ingredient searches in Nearby.
+- Staged manual additions and quick-add chips, plus the existing native receipt capture and editable review flow.
+- A sample neighborhood map/list, combined filters, photo posts, drafts, requests, conversations, meal-swap membership, and illustrative impact rewards.
+- Community data and photo blobs persist in IndexedDB, separately for each account and the anonymous demo. Reset community activity in **My → Settings** without changing the fridge or sign-in.
 - Email/password sign-up and sign-in through Supabase Auth; automatic session refresh.
 - Private, per-user receipt uploads (JPEG/PNG/WebP, maximum 6 MB).
 - Server-side OpenAI vision extraction with structured output, food-only filtering, ambiguous-line warnings, and validation.
 - Review/edit names, quantities, units and optional best-before dates; skip uncertain items.
 - Atomic confirmation, row locking and stable receipt line IDs prevent duplicate inserts when confirmation is retried.
 - Supabase fridge loading, manual additions, date edits and removal.
-- Three labeled demo recipes matched by ingredient names and explicit aliases.
+- Six bundled demo recipes, merged with the account-loaded collection by name and matched using explicit ingredient aliases.
 - A preset sample receipt uses the same deployed backend save flow when signed in.
 - A separate, clearly labeled local sample mode works without Auth, AI, or network access. It stores data on this device and does not claim to be AI or Supabase persistence.
 
@@ -71,7 +78,7 @@ The API key is not needed for **Use the sample receipt**. In signed-in mode that
 - Files remain in the private bucket; automatic retention cleanup is outside this MVP. Do not upload receipts with personal details you do not want processed.
 - Scanner has a basic 20-scan/hour check per account; it is intended for a controlled hackathon demo, not public high-traffic use.
 
-`tests/` contains 25 automated tests: 20 for extraction, validation, receipt weight normalization, provider failures, session rejection, consent, recipe matching and sample labeling, plus 5 for the native camera/gallery adapter and iOS configuration. `supabase/tests/security.sql` contains 10 real Postgres tests, all wrapped in a transaction that rolls back its synthetic fixtures. Use the Supabase SQL editor or connected SQL tool to run it; do not copy test fixtures into production data.
+`tests/` contains 39 automated tests: the original 25 extraction/domain/native tests plus 14 for community persistence, identity separation, filtering, drafts/photos, group capacity, message behavior, reward retries, reset boundaries, recipe discovery, and route parsing. Repository tests use a transactional storage double; browser walkthroughs exercise real IndexedDB. `supabase/tests/security.sql` contains 10 real Postgres tests, all wrapped in a transaction that rolls back its synthetic fixtures. Use the Supabase SQL editor or connected SQL tool to run it; do not copy test fixtures into production data.
 
 OpenAI errors distinguish API quota/billing failures from temporary rate limits, overload, invalid credentials and model access. Only allowlisted error codes, HTTP status and request IDs are saved in the scan metadata; raw provider messages and keys are never saved. Billing errors require account action and are not automatically retried. Temporary rate limits display the provider's retry interval when available.
 
@@ -82,6 +89,8 @@ The latest Supabase advisor reports one Auth setting warning: [leaked-password p
 ## Source map
 
 - `public/`: static browser app, styles, public config and shared domain logic.
+- `public/features/`: kitchen/community views and the existing receipt/auth flows adapted to the new shell.
+- `public/lib/`: navigation, shared UI/illustrations, recipe discovery, kitchen access, and the account-scoped community repository.
 - `ios/`: generated Xcode demo project with the Capacitor camera plugin and permission descriptions.
 - `supabase/functions/scan-receipt/`: server-only image extraction pipeline.
 - `supabase/migrations/`: incremental changes applied to the existing project.

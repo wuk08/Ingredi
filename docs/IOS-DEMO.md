@@ -24,7 +24,7 @@ In Xcode, choose the **App** scheme and an installed **iPhone Simulator**, then 
 
 Sign in with the confirmed Ingredi email/password account you already created. The installed app has its own session storage, so it will not inherit your browser login. Supabase data is shared after signing in.
 
-Choose **Scan a receipt → Load demo photo for live AI**, check the OpenAI consent box, then choose **Read my receipt**. This sends the bundled synthetic image through the real server-side AI pipeline. Review the items and confirm them into your fridge.
+Choose **Cook → Fill up fridge → Scan a receipt → Load demo photo for live AI**, check the OpenAI consent box, then choose **Read my receipt**. This sends the bundled synthetic image through the real server-side AI pipeline. Review the items and confirm them into your fridge.
 
 The Simulator has no physical camera. Use the bundled image or import a receipt image into its Photos app and choose **Choose Photos**. **Use the sample receipt** is the separate preset-extraction fallback.
 
