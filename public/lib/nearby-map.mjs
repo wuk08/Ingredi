@@ -1,5 +1,5 @@
 import { isNativeApp } from './capture.mjs';
-import { icon, escape } from './ui.mjs';
+import { icon } from './ui.mjs';
 export function validLocation(value) {
   return Array.isArray(value)&&value.length===2&&value.every(Number.isFinite)&&Math.abs(value[0])<=90&&Math.abs(value[1])<=180;
 }
@@ -25,26 +25,105 @@ export async function currentPosition({native=isNativeApp(),loadNative=()=>impor
   if(!Number.isFinite(latitude)||!Number.isFinite(longitude)||Math.abs(latitude)>90||Math.abs(longitude)>180)throw new Error('Location was not readable. Try getting your location again.');
   return [latitude,longitude];
 }
-export function mountMap({element,posts,selected,view,location,residenceId,residenceName,onSelect,onView}) {
-  if(!validLocation(location)){element.textContent='Add a map location to your residence to display the map.';return ()=>{};}
-  const L=globalThis.L;
-  if(!L){element.innerHTML='<p class="map-load-notice">The map could not load. Switch to List to browse demo posts.</p>';return ()=>{};}
+const mapAsset = path => new URL(path, document.baseURI).href;
+const loadMapLibrary = () => import(mapAsset('vendor/maplibre/maplibre-gl.mjs'));
+function mapNotice(element) {
+  const notice = document.createElement('div');
+  notice.className = 'map-load-notice';
+  notice.textContent = 'Loading the street map…';
+  element.append(notice);
+  return notice;
+}
+export function mountMap(options, { loadLibrary = loadMapLibrary } = {}) {
+  if (!validLocation(options.location)) {
+    options.element.textContent = 'Add a map location to your residence to display the map.';
+    return () => {};
+  }
+  let disposed = false, dispose = () => {};
+  const notice = mapNotice(options.element);
+  Promise.resolve().then(loadLibrary).then(GL => {
+    if (disposed) return;
+    GL.setWorkerUrl(mapAsset('vendor/maplibre/maplibre-gl-worker.mjs?v=6.16.0'));
+    GL.setWorkerCount(1);
+    dispose = mountVectorMap({ ...options, notice }, GL);
+  }).catch(() => {
+    if (disposed) return;
+    notice.hidden = false;
+    notice.textContent = 'The street map could not load on this device. Switch to List to browse the listings.';
+  });
+  return () => { if (disposed) return; disposed = true; dispose(); notice.remove(); };
+}
+export function mountVectorMap({ element, posts, selected, view, location, residenceId, residenceName, onSelect, onView, notice = mapNotice(element) }, GL) {
   const touch = Boolean(globalThis.matchMedia?.('(pointer: coarse)').matches);
-  // Let the page scroll over the map. Touch users can still pinch and move it with two fingers.
-  // Rendering replaces this map; synchronous zoom avoids transition callbacks on a removed map.
-  const map=L.map(element,{attributionControl:false,scrollWheelZoom:false,dragging:!touch,zoomAnimation:false,fadeAnimation:false,markerZoomAnimation:false}).setView((view||defaultView(location)).center,(view||defaultView(location)).zoom);
-  L.control.attribution({position:'bottomright',prefix:false}).addTo(map);
-  const tiles=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors'}).addTo(map);
-  const notice=document.createElement('div');notice.className='map-load-notice';notice.hidden=true;notice.textContent='Street tiles unavailable. Your residence is still selected. Check your connection.';element.append(notice);
-  let loaded=0;tiles.on('tileload',()=>{loaded++;notice.hidden=true;});tiles.on('tileerror',()=>{if(!loaded)notice.hidden=false;});
-  const buildingPosts=posts.filter(p=>residenceId&&p.residenceId===residenceId);
-  const chosen=buildingPosts.find(p=>p.id===selected)||buildingPosts[0];
-  const markers=[...posts.filter(p=>!residenceId||p.residenceId!==residenceId),...(chosen?[chosen]:[])];
-  for(const p of markers){const same=residenceId&&p.residenceId===residenceId;const label=same?`${residenceName} · ${buildingPosts.length} sample posts`:p.title;const marker=L.marker(same?location:demoPosition(p,location),{title:label,alt:label,icon:L.divIcon({className:`real-map-pin ${p.id===selected?'selected':''}`,html:same?`<span>${buildingPosts.length}</span>`:icon('pin'),iconSize:[44,44],iconAnchor:[22,40]})}).addTo(map);marker.on('click',()=>onSelect(same?buildingPosts[(buildingPosts.indexOf(p)+1)%buildingPosts.length].id:p.id));marker.bindTooltip(escape(label));}
-  if(location&&!buildingPosts.length)L.circleMarker(location,{radius:6,color:'#fff',weight:2,fillColor:'#234d3c',fillOpacity:1}).addTo(map).bindTooltip(escape(residenceName||'Your residence'));
-  let disposed=false;
-  const moved=()=>{if(disposed)return;const center=map.getCenter();onView({center:[center.lat,center.lng],zoom:map.getZoom()});};
-  map.on('moveend zoomend',moved);
-  const resize=new ResizeObserver(()=>{if(!disposed)map.invalidateSize({pan:false});});resize.observe(element);
-  return ()=>{if(disposed)return;disposed=true;resize.disconnect();map.off('moveend zoomend',moved);map.remove();};
+  const initial = view || defaultView(location);
+  // Keep wheel events out of map gesture handlers without cancelling page scrolling.
+  const pageWheel = event => event.stopPropagation();
+  const map = new GL.Map({
+    container: element,
+    style: mapAsset('maps/residence-style.json'),
+    // Existing views use a 256px tile zoom; the vector renderer uses a 512px world.
+    center: [initial.center[1], initial.center[0]], zoom: initial.zoom - 1,
+    minZoom: 1, maxZoom: 18, maxPitch: 0,
+    scrollZoom: false, cooperativeGestures: touch,
+    dragRotate: false, touchPitch: false,
+    attributionControl: false, fadeDuration: 0,
+    renderWorldCopies: false
+  });
+  element.addEventListener('wheel', pageWheel, { capture: true, passive: true });
+  map.touchZoomRotate.disableRotation();
+  map.addControl(new GL.NavigationControl({ showCompass: false }), 'top-left');
+  map.addControl(new GL.AttributionControl({ compact: false }), 'bottom-right');
+  let disposed = false;
+  const ready = () => { if (!disposed) notice.hidden = true; };
+  const failed = () => {
+    if (disposed) return;
+    notice.hidden = false;
+    notice.textContent = 'Street map unavailable. Your residence is still selected; listings are available below.';
+  };
+  const loadedSource = event => { if (event.sourceDataType === 'content') ready(); };
+  map.on('load', ready);
+  map.on('sourcedata', loadedSource);
+  map.on('error', failed);
+  const buildingPosts = posts.filter(p => residenceId && p.residenceId === residenceId);
+  const chosen = buildingPosts.find(p => p.id === selected) || buildingPosts[0];
+  const markers = [];
+  const displayed = [...posts.filter(p => !residenceId || p.residenceId !== residenceId), ...(chosen ? [chosen] : [])];
+  for (const p of displayed) {
+    const same = residenceId && p.residenceId === residenceId;
+    const position = same ? location : demoPosition(p, location);
+    const label = same ? `${residenceName} · ${buildingPosts.length} sample post${buildingPosts.length === 1 ? '' : 's'}` : p.title;
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = `real-map-pin ${p.id === selected ? 'selected' : ''}`;
+    button.title = label;
+    button.setAttribute('aria-label', label);
+    if (same) button.textContent = String(buildingPosts.length);
+    else button.innerHTML = icon('pin');
+    button.onclick = event => {
+      event.preventDefault(); event.stopPropagation();
+      if (!disposed) onSelect(same ? buildingPosts[(buildingPosts.indexOf(p) + 1) % buildingPosts.length].id : p.id);
+    };
+    markers.push(new GL.Marker({ element: button, anchor: 'bottom' }).setLngLat([position[1], position[0]]).addTo(map));
+  }
+  if (!buildingPosts.length) {
+    const origin = document.createElement('div'); origin.className = 'residence-origin'; origin.title = residenceName || 'Your residence';
+    markers.push(new GL.Marker({ element: origin }).setLngLat([location[1], location[0]]).addTo(map));
+  }
+  const moved = () => {
+    if (disposed) return;
+    const center = map.getCenter();
+    onView({ center: [center.lat, center.lng], zoom: map.getZoom() + 1 });
+  };
+  map.on('moveend', moved);
+  const resize = new ResizeObserver(() => { if (!disposed) map.resize(); });
+  resize.observe(element);
+  return () => {
+    if (disposed) return;
+    disposed = true;
+    resize.disconnect();
+    element.removeEventListener('wheel', pageWheel, { capture: true });
+    map.off('moveend', moved); map.off('load', ready); map.off('sourcedata', loadedSource); map.off('error', failed);
+    for (const marker of markers) marker.remove();
+    map.remove();
+  };
 }

@@ -14,7 +14,7 @@ const server = http.createServer(async (req,res) => {
     res.setHeader('Referrer-Policy','strict-origin-when-cross-origin');
     res.setHeader('Cache-Control','no-store');
     const geocoderUrl = process.env.GEOCODER_URL || config.geocoderUrl;
-    res.setHeader('Content-Security-Policy',`default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob: data: https://tile.openstreetmap.org; connect-src 'self' https://*.supabase.co ${new URL(geocoderUrl).origin}; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'`);
+    res.setHeader('Content-Security-Policy',`default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob: data: https://tiles.openfreemap.org; worker-src 'self'; connect-src 'self' https://tiles.openfreemap.org https://*.supabase.co ${new URL(geocoderUrl).origin}; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'`);
     if (path === '/config.js') {
       res.writeHead(200,{'Content-Type':'text/javascript'}).end(`export const config = ${JSON.stringify({supabaseUrl: process.env.SUPABASE_URL || config.supabaseUrl, publishableKey: process.env.SUPABASE_PUBLISHABLE_KEY || config.publishableKey, geocoderUrl})};`); return;
     }

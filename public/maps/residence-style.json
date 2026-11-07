@@ -1,0 +1,109 @@
+{
+  "version": 8,
+  "name": "Ingredi Streets",
+  "metadata": { "description": "Flat neighborhood streets, buildings and sparse labels. Original Ingredi style using the OpenMapTiles schema." },
+  "glyphs": "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf",
+  "sources": {
+    "streets": { "type": "vector", "url": "https://tiles.openfreemap.org/planet" }
+  },
+  "layers": [
+    { "id": "background", "type": "background", "paint": { "background-color": "#f5f4f0" } },
+    {
+      "id": "green-land", "type": "fill", "source": "streets", "source-layer": "landcover",
+      "filter": ["in", ["get", "class"], ["literal", ["wood", "grass"]]],
+      "paint": { "fill-color": "#e4eddb", "fill-opacity": 0.8 }
+    },
+    { "id": "parks", "type": "fill", "source": "streets", "source-layer": "park", "paint": { "fill-color": "#dfead4", "fill-opacity": 0.8 } },
+    { "id": "water", "type": "fill", "source": "streets", "source-layer": "water", "paint": { "fill-color": "#c7dfee" } },
+    {
+      "id": "waterways", "type": "line", "source": "streets", "source-layer": "waterway", "minzoom": 12,
+      "paint": { "line-color": "#c7dfee", "line-width": ["interpolate", ["linear"], ["zoom"], 12, 1, 18, 4] }
+    },
+    {
+      "id": "buildings", "type": "fill", "source": "streets", "source-layer": "building", "minzoom": 14,
+      "paint": { "fill-color": "#e4e2dd", "fill-outline-color": "#d7d5cf", "fill-opacity": ["interpolate", ["linear"], ["zoom"], 14, 0.45, 16, 0.9] }
+    },
+    {
+      "id": "local-road-outline", "type": "line", "source": "streets", "source-layer": "transportation", "minzoom": 12,
+      "filter": ["in", ["get", "class"], ["literal", ["minor", "service"]]],
+      "layout": { "line-cap": "round", "line-join": "round" },
+      "paint": { "line-color": "#deddd7", "line-width": ["interpolate", ["exponential", 1.4], ["zoom"], 12, 1, 16, 9, 19, 25] }
+    },
+    {
+      "id": "local-roads", "type": "line", "source": "streets", "source-layer": "transportation", "minzoom": 12,
+      "filter": ["in", ["get", "class"], ["literal", ["minor", "service"]]],
+      "layout": { "line-cap": "round", "line-join": "round" },
+      "paint": { "line-color": "#ffffff", "line-width": ["interpolate", ["exponential", 1.4], ["zoom"], 12, 0.5, 16, 7, 19, 23] }
+    },
+    {
+      "id": "main-road-outline", "type": "line", "source": "streets", "source-layer": "transportation",
+      "filter": ["in", ["get", "class"], ["literal", ["primary", "secondary", "tertiary"]]],
+      "layout": { "line-cap": "round", "line-join": "round" },
+      "paint": { "line-color": "#d8d5cc", "line-width": ["interpolate", ["exponential", 1.4], ["zoom"], 7, 0.6, 12, 3, 16, 12, 19, 30] }
+    },
+    {
+      "id": "main-roads", "type": "line", "source": "streets", "source-layer": "transportation",
+      "filter": ["in", ["get", "class"], ["literal", ["primary", "secondary", "tertiary"]]],
+      "layout": { "line-cap": "round", "line-join": "round" },
+      "paint": { "line-color": "#fffdf7", "line-width": ["interpolate", ["exponential", 1.4], ["zoom"], 7, 0.4, 12, 2, 16, 10, 19, 28] }
+    },
+    {
+      "id": "highway-outline", "type": "line", "source": "streets", "source-layer": "transportation",
+      "filter": ["in", ["get", "class"], ["literal", ["motorway", "trunk"]]],
+      "layout": { "line-cap": "round", "line-join": "round" },
+      "paint": { "line-color": "#dfd3ae", "line-width": ["interpolate", ["exponential", 1.4], ["zoom"], 5, 0.7, 12, 5, 16, 14, 19, 34] }
+    },
+    {
+      "id": "highways", "type": "line", "source": "streets", "source-layer": "transportation",
+      "filter": ["in", ["get", "class"], ["literal", ["motorway", "trunk"]]],
+      "layout": { "line-cap": "round", "line-join": "round" },
+      "paint": { "line-color": "#fff1c6", "line-width": ["interpolate", ["exponential", 1.4], ["zoom"], 5, 0.4, 12, 3, 16, 12, 19, 32] }
+    },
+    {
+      "id": "walkways", "type": "line", "source": "streets", "source-layer": "transportation", "minzoom": 17,
+      "filter": ["==", ["get", "class"], "path"],
+      "paint": { "line-color": "#e7e5dc", "line-width": ["interpolate", ["linear"], ["zoom"], 17, 1, 19, 2] }
+    },
+    {
+      "id": "street-names", "type": "symbol", "source": "streets", "source-layer": "transportation_name", "minzoom": 13,
+      "filter": ["in", ["get", "class"], ["literal", ["motorway", "trunk", "primary", "secondary", "tertiary", "minor"]]],
+      "layout": {
+        "symbol-placement": "line", "symbol-spacing": 400,
+        "text-field": ["coalesce", ["get", "name:en"], ["get", "name:latin"], ["get", "name"]],
+        "text-font": ["Noto Sans Regular"],
+        "text-size": ["interpolate", ["linear"], ["zoom"], 13, 10, 17, 12, 19, 13],
+        "text-max-angle": 25, "text-padding": 16
+      },
+      "paint": { "text-color": "#687172", "text-halo-color": "#ffffff", "text-halo-width": 1.5 }
+    },
+    {
+      "id": "city-names", "type": "symbol", "source": "streets", "source-layer": "place", "minzoom": 4, "maxzoom": 16,
+      "filter": ["in", ["get", "class"], ["literal", ["city", "town", "village", "suburb"]]],
+      "layout": {
+        "text-field": ["coalesce", ["get", "name:en"], ["get", "name:latin"], ["get", "name"]],
+        "text-font": ["Noto Sans Regular"], "text-size": ["interpolate", ["linear"], ["zoom"], 4, 11, 14, 16],
+        "text-max-width": 8, "text-padding": 28
+      },
+      "paint": { "text-color": "#596568", "text-halo-color": "#ffffff", "text-halo-width": 2 }
+    },
+    {
+      "id": "water-names", "type": "symbol", "source": "streets", "source-layer": "water_name", "minzoom": 12,
+      "filter": ["==", ["geometry-type"], "LineString"],
+      "layout": {
+        "symbol-placement": "line", "symbol-spacing": 500,
+        "text-field": ["coalesce", ["get", "name:en"], ["get", "name:latin"], ["get", "name"]],
+        "text-font": ["Noto Sans Regular"], "text-size": 12, "text-letter-spacing": 0.1, "text-padding": 20
+      },
+      "paint": { "text-color": "#779baa", "text-halo-color": "#d9eaf4", "text-halo-width": 1 }
+    },
+    {
+      "id": "key-landmarks", "type": "symbol", "source": "streets", "source-layer": "poi", "minzoom": 16,
+      "filter": ["all", ["in", ["get", "class"], ["literal", ["hospital", "library", "rail"]]], ["<=", ["coalesce", ["get", "rank"], 99], 3]],
+      "layout": {
+        "text-field": ["coalesce", ["get", "name:en"], ["get", "name:latin"], ["get", "name"]],
+        "text-font": ["Noto Sans Regular"], "text-size": 11, "text-max-width": 9, "text-padding": 32
+      },
+      "paint": { "text-color": "#75867b", "text-halo-color": "#ffffff", "text-halo-width": 1.5 }
+    }
+  ]
+}

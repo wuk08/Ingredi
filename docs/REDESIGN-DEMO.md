@@ -58,7 +58,7 @@ For someone else's Available post, **Request item** opens/reuses the conversatio
 
 **My → Settings → Reset community demo** restores the chosen identity's sample community, bookmarks, preferences, and impact. It leaves authentication and fridge data intact. The confirmation explains what resets.
 
-Nearby uses locally bundled Leaflet 1.9.4 and OpenStreetMap street tiles. [Residence setup and sample student verification](RESIDENCE-DEMO.md) now provide explicit address/GPS lookup, self-confirmed buildings, a default My building feed, opt-in neighborhood visibility, and a fake-card check before student exchanges. Opening Nearby never requests GPS: maps center on the saved residence, and manually entered buildings work in list view without coordinates. Only the Use my current location setup button requests a foreground location fix. Raw fixes are temporary; confirmed building metadata is stored locally for the selected identity. Map tiles and live address lookup require internet access.
+Nearby uses locally bundled MapLibre GL JS 6.16.0 with an original flat street style and OpenFreeMap vector tiles. The style keeps roads, building footprints, parks, water, street names, and a small selection of landmarks while omitting raster textures, 3D buildings, house numbers, and dense business icons. [Residence setup and sample student verification](RESIDENCE-DEMO.md) now provide explicit address/GPS lookup, self-confirmed buildings, a default My building feed, opt-in neighborhood visibility, and a fake-card check before student exchanges. Opening Nearby never requests GPS: maps center on the saved residence, and manually entered buildings work in list view without coordinates. Only the Use my current location setup button requests a foreground location fix. Raw fixes are temporary; confirmed building metadata is stored locally for the selected identity. Vector tiles/fonts and live address lookup require internet access. OpenMapTiles/OpenStreetMap attribution stays visible; no map-provider account or API key is required.
 
 Community listings remain sample data. Their simulated marker positions are deterministic offsets around the saved residence, matching the displayed sample distances; they do not represent actual local people or pickups. Community messages, posts, requests, and joins never reach real neighbors. No social sign-in, grocery-photo recognition, custom camera preview, push notifications, or real multi-user messaging is included.
 
@@ -66,9 +66,9 @@ This update adds the native Capacitor Geolocation plugin. On the Mac, run the pi
 
 ## Verification
 
-- Original receipt/domain/native tests retained; community/discovery/navigation, map/location, and residence tests (59 total).
+- Original receipt/domain/native tests retained; community/discovery/navigation, map/location, and residence tests (61 total).
 - The browser walkthrough checks actual IndexedDB draft/photo restoration, linked post requests, sample replies, handoff rewards/ratings, membership persistence, recipe bookmarks, missing-ingredient search, and reset preserving the fridge.
-- Phone layouts checked at 375, 390, and 430px, with a desktop sidebar layout. Nearby scrolls vertically; its selected card sits below the map in normal page flow, followed by more listings. Filters live in a separate panel, and the muted map retains roads, buildings, labels, and attribution. Detail screens reserve space for bottom actions.
+- Phone layouts checked at 375, 390, and 430px, with a desktop sidebar layout. Nearby scrolls vertically; its selected card sits below the map in normal page flow, followed by more listings. Filters live in a separate panel, and the simplified vector map retains roads, buildings, sparse labels, and attribution. Detail screens reserve space for bottom actions.
 - Web and iOS frontend builds are checked independently from the native Xcode build.
 - Real AI scanning uses the existing backend. This redesign's interactive acceptance runs use the isolated local demo rather than adding test data to a user's signed-in fridge.
 

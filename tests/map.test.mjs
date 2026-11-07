@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {demoPosition,currentPosition,defaultView,mountMap} from '../public/lib/nearby-map.mjs';
+import {demoPosition,currentPosition,defaultView,mountMap,mountVectorMap} from '../public/lib/nearby-map.mjs';
 import {seedCommunity,ensureResidenceState,actions,communityView} from '../public/lib/community.mjs';
 import {ensurePhotoPermissions,locationPermissions} from '../scripts/lib/ios-config.mjs';
 import {nearby} from '../public/features/community-views.mjs';
@@ -48,29 +48,53 @@ test('native location uses Capacitor foreground position rather than background 
 test('native map permissions and tile policy settings are bundled',async()=>{
   const plist=ensurePhotoPermissions('<plist><dict></dict></plist>');for(const key of Object.keys(locationPermissions))assert.ok(plist.includes(`<key>${key}</key>`));assert.equal(ensurePhotoPermissions(plist),plist);
   const config=JSON.parse(await readFile(new URL('../capacitor.config.json',import.meta.url),'utf8'));assert.match(config.appendUserAgent,/Ingredi/);
-  const server=await readFile(new URL('../scripts/serve.mjs',import.meta.url),'utf8');assert.match(server,/https:\/\/tile\.openstreetmap\.org/);assert.match(server,/strict-origin-when-cross-origin/);
+  const server=await readFile(new URL('../scripts/serve.mjs',import.meta.url),'utf8');assert.match(server,/https:\/\/tiles\.openfreemap\.org/);assert.match(server,/strict-origin-when-cross-origin/);
 });
 
 test('map teardown ignores queued movement and resize callbacks after changing views',t=>{
-  const originals={L:globalThis.L,document:globalThis.document,ResizeObserver:globalThis.ResizeObserver};
+  const originals={document:globalThis.document,ResizeObserver:globalThis.ResizeObserver};
   t.after(()=>Object.assign(globalThis,originals));
-  const handlers=new Map();let removed=false,resizes=0,views=0,resizeCallback;
-  const layer={addTo(){return this;},bindTooltip(){return this;},on(){return this;}};
+  const handlers=new Map();let removed=false,resizes=0,views=0,resizeCallback,removedMarkers=0,mapZoom,mapCenter;
   const map={
-    setView(){return this;},
-    on(names,callback){for(const name of names.split(' '))handlers.set(name,callback);return this;},
-    off(names){for(const name of names.split(' '))handlers.delete(name);return this;},
+    touchZoomRotate:{disableRotation(){}},addControl(){return this;},
+    on(name,callback){handlers.set(name,callback);return this;},
+    off(name){handlers.delete(name);return this;},
     getCenter(){assert.equal(removed,false,'movement must not read a removed map');return {lat:40,lng:-74};},
-    getZoom(){return 14;},
-    invalidateSize(){assert.equal(removed,false,'queued resize must not touch a removed map');resizes++;},
+    getZoom(){return mapZoom;},
+    resize(){assert.equal(removed,false,'queued resize must not touch a removed map');resizes++;},
     remove(){removed=true;handlers.get('moveend')?.();}
   };
-  globalThis.L={map:()=>map,control:{attribution:()=>layer},tileLayer:()=>layer,circleMarker:()=>layer};
-  globalThis.document={createElement:()=>({})};
+  const GL={Map:class{constructor(options){mapZoom=options.zoom;mapCenter=options.center;return map;}},NavigationControl:class{},AttributionControl:class{},Marker:class{setLngLat(){return this;}addTo(){return this;}remove(){removedMarkers++;}}};
+  globalThis.document={baseURI:'https://ingredi.test/index.html',createElement:()=>({})};
   globalThis.ResizeObserver=class{constructor(callback){resizeCallback=callback;}observe(){}disconnect(){}};
-  const dispose=mountMap({element:{append(){}},posts:[],location:[40,-74],onSelect(){},onView(){views++;}});
+  const dispose=mountVectorMap({element:{append(){},addEventListener(){},removeEventListener(){}},posts:[],location:[40,-74],onSelect(){},onView(value){views++;assert.deepEqual(value,{center:[40,-74],zoom:14});}},GL);
+  assert.deepEqual(mapCenter,[-74,40]);assert.equal(mapZoom,13);
   const queuedMovement=handlers.get('moveend');queuedMovement();resizeCallback();
   assert.equal(views,1);assert.equal(resizes,1);
   dispose();resizeCallback();queuedMovement();dispose();
-  assert.equal(removed,true);assert.equal(views,1);assert.equal(resizes,1);
+  assert.equal(removed,true);assert.equal(views,1);assert.equal(resizes,1);assert.equal(removedMarkers,1);
+});
+
+test('leaving Nearby before the vector library loads cannot mount a stale map',async t=>{
+  const original=globalThis.document;t.after(()=>{globalThis.document=original;});
+  let finish,initialized=false,noticeRemoved=false;
+  globalThis.document={createElement:()=>({remove(){noticeRemoved=true;}})};
+  const dispose=mountMap({element:{append(){}},location:[40,-74]},{loadLibrary:()=>new Promise(resolve=>{finish=resolve;})});
+  await new Promise(resolve=>setImmediate(resolve));
+  dispose();finish({setWorkerUrl(){initialized=true;}});
+  await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(initialized,false);assert.equal(noticeRemoved,true);
+});
+
+test('street style preserves geography while omitting raster textures and dense POIs',async()=>{
+  const style=JSON.parse(await readFile(new URL('../public/maps/residence-style.json',import.meta.url),'utf8'));
+  assert.equal(style.version,8);assert.equal(style.sources.streets.type,'vector');
+  assert.equal(style.layers.find(l=>l.id==='buildings').type,'fill');
+  assert.equal(style.layers.find(l=>l.id==='street-names')['source-layer'],'transportation_name');
+  assert.ok(style.layers.some(l=>l['source-layer']==='water'));assert.ok(style.layers.some(l=>l['source-layer']==='park'));
+  assert.equal(style.layers.some(l=>l.type==='raster'||l.type==='fill-extrusion'||l.paint?.['fill-pattern']),false);
+  assert.equal(style.layers.some(l=>l['source-layer']==='housenumber'),false);
+  const landmarks=style.layers.filter(l=>l['source-layer']==='poi');assert.equal(landmarks.length,1);assert.ok(landmarks[0].minzoom>=16);
+  const html=await readFile(new URL('../public/index.html',import.meta.url),'utf8');assert.match(html,/vendor\/maplibre\/maplibre-gl.css/);assert.doesNotMatch(html,/leaflet/);
+  const native=await readFile(new URL('../scripts/build-ios.mjs',import.meta.url),'utf8');assert.match(native,/worker-src 'self'/);assert.match(native,/tiles.openfreemap.org/);
 });
