@@ -34,7 +34,7 @@ For ongoing Windows/Mac development, follow [the GitHub sync workflow](docs/SYNC
 - Home, Cook, Nearby, Message, and My, with phone navigation and a desktop sidebar.
 - Recipe search, preference chips, random suggestions, saved recipes, ingredients/steps, and missing-ingredient searches in Nearby.
 - Staged manual additions and quick-add chips, plus the existing native receipt capture and editable review flow.
-- A sample neighborhood map/list, combined filters, photo posts, drafts, requests, conversations, meal-swap membership, and illustrative impact rewards.
+- An interactive OpenStreetMap map/list, optional current-location centering, Ann Arbor demo pins, combined filters, photo posts, drafts, requests, conversations, meal-swap membership, and illustrative impact rewards.
 - Community data and photo blobs persist in IndexedDB, separately for each account and the anonymous demo. Reset community activity in **My → Settings** without changing the fridge or sign-in.
 - Email/password sign-up and sign-in through Supabase Auth; automatic session refresh.
 - Private, per-user receipt uploads (JPEG/PNG/WebP, maximum 6 MB).
@@ -78,7 +78,7 @@ The API key is not needed for **Use the sample receipt**. In signed-in mode that
 - Files remain in the private bucket; automatic retention cleanup is outside this MVP. Do not upload receipts with personal details you do not want processed.
 - Scanner has a basic 20-scan/hour check per account; it is intended for a controlled hackathon demo, not public high-traffic use.
 
-`tests/` contains 39 automated tests: the original 25 extraction/domain/native tests plus 14 for community persistence, identity separation, filtering, drafts/photos, group capacity, message behavior, reward retries, reset boundaries, recipe discovery, and route parsing. Repository tests use a transactional storage double; browser walkthroughs exercise real IndexedDB. `supabase/tests/security.sql` contains 10 real Postgres tests, all wrapped in a transaction that rolls back its synthetic fixtures. Use the Supabase SQL editor or connected SQL tool to run it; do not copy test fixtures into production data.
+`tests/` contains 44 automated tests: the original 25 extraction/domain/native tests plus 5 map/location tests and 14 for community persistence, identity separation, filtering, drafts/photos, group capacity, message behavior, reward retries, reset boundaries, recipe discovery, and route parsing. Repository tests use a transactional storage double; browser walkthroughs exercise real IndexedDB. `supabase/tests/security.sql` contains 10 real Postgres tests, all wrapped in a transaction that rolls back its synthetic fixtures. Use the Supabase SQL editor or connected SQL tool to run it; do not copy test fixtures into production data.
 
 OpenAI errors distinguish API quota/billing failures from temporary rate limits, overload, invalid credentials and model access. Only allowlisted error codes, HTTP status and request IDs are saved in the scan metadata; raw provider messages and keys are never saved. Billing errors require account action and are not automatically retried. Temporary rate limits display the provider's retry interval when available.
 

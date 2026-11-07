@@ -27,7 +27,7 @@ For the native app, pull/copy the updated source onto the Mac, install the pinne
 
 ### Share a little extra
 
-1. Open **Nearby**. Switch between the illustrative sample map and list; combine search, distance, type, category, and offer filters.
+1. Open **Nearby**. Switch between the interactive street map and list; combine search, distance, type, category, and offer filters.
 2. Use **+** to create an Available post. Photos are optional; up to five are resized and saved as local blobs. **Save draft** restores the form and photos after reload.
 3. Publish. A sample neighbor immediately sends a request for the demo.
 4. Open the linked conversation, send a message, and show the deterministic sample reply.
@@ -57,11 +57,15 @@ For someone else's Available post, **Request item** opens/reuses the conversatio
 
 **My → Settings → Reset community demo** restores the chosen identity's sample community, bookmarks, preferences, and impact. It leaves authentication and fridge data intact. The confirmation explains what resets.
 
-The sample map does not request location permissions or contact a map service. Community messages, posts, requests, and joins never reach real neighbors. No social sign-in, grocery-photo recognition, custom camera preview, push notifications, or real multi-user messaging is included.
+Nearby uses locally bundled Leaflet 1.9.4 and OpenStreetMap street tiles. It starts in Ann Arbor. Tap the location pin to request your current position; denial, timeout, or unavailable location keeps the Ann Arbor view. The Ann Arbor demo button returns to the fixture area. Positions are held only in memory, never saved to community storage or Supabase. The map provider receives tile requests for the displayed area. Attribution remains visible. Tiles require internet access; an error notice appears when they cannot load.
+
+Demo listings and sample distances always belong to Ann Arbor, even when the map centers on your actual location. New community posts also receive simulated Ann Arbor positions. Community messages, posts, requests, and joins never reach real neighbors. No social sign-in, grocery-photo recognition, custom camera preview, push notifications, or real multi-user messaging is included.
+
+This update adds the native Capacitor Geolocation plugin. On the Mac, run the pinned dependency install, then `ios:prepare` to register the plugin and location usage descriptions before rebuilding in Xcode. No background location watch is used.
 
 ## Verification
 
-- Original receipt/domain/native tests retained; 14 focused community/discovery/navigation tests added.
+- Original receipt/domain/native tests retained; 14 community/discovery/navigation tests and 5 map/location tests added (44 total).
 - The browser walkthrough checks actual IndexedDB draft/photo restoration, linked post requests, sample replies, handoff rewards/ratings, membership persistence, recipe bookmarks, missing-ingredient search, and reset preserving the fridge.
 - Phone layouts checked at 375, 390, and 430px, with a desktop sidebar layout. Map controls sit above the selected post card and navigation; detail screens reserve space for bottom actions.
 - Web and iOS frontend builds are checked independently from the native Xcode build.

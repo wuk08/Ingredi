@@ -2,7 +2,8 @@ import { getSession, signOut } from "./lib/api.mjs";
 import { isNativeApp } from "./lib/capture.mjs";
 import { validateImage, MAX_IMAGE_BYTES, localDate } from "./lib/domain.mjs";
 import * as kitchen from "./lib/kitchen.mjs";
-import { DemoRepository, seedCommunity } from "./lib/community.mjs";
+import { DemoRepository, seedCommunity, filterPosts } from "./lib/community.mjs";
+import { mountMap, currentPosition, DEFAULT_VIEW } from './lib/nearby-map.mjs';
 import { catalog, discover } from "./lib/recipes.mjs";
 import { Navigation, tabs } from "./lib/navigation.mjs";
 import { icon, escape, avatar, empty } from "./lib/ui.mjs";
@@ -19,6 +20,7 @@ const nav = new Navigation(() => {
 });
 const fallback = seedCommunity();
 let photoUrls = [];
+let disposeMap = () => {};
 const photoURL = (blob) => {
   const url = URL.createObjectURL(blob);
   photoUrls.push(url);
@@ -38,6 +40,8 @@ function context() {
   return { state, d, recipes: discover(catalog(state.recipes), state.pantry), photoURL };
 }
 function render() {
+  disposeMap();
+  disposeMap = () => {};
   photoUrls.forEach(URL.revokeObjectURL);
   photoUrls = [];
   const route = nav.route, ctx = context(), d = ctx.d;
@@ -71,6 +75,10 @@ function render() {
     headerTitle = chat?.groupId ? d.groups.find((g) => g.id === chat.groupId)?.title : d.people[chat?.person]?.name || "Conversation";
   }
   $("#app").innerHTML = `<aside class="sidebar"><button class="brand" data-tab="home">${icon("leaf")} ingredi<span>.</span></button><p class="brand-note">Cook. Share. Belong.</p><nav aria-label="Main navigation">${navButtons}</nav><div class="sidebar-bottom">${icon("leaf")}<h3>A little less waste.<br>A little more together.</h3><p>Good things happen<br>in your neighborhood.</p><span class="mode-badge">Demo community</span></div></aside><div class="workspace ${root ? "root-view" : "detail-view"} ${route.view === "nearby" ? "nearby-workspace" : ""}"><header class="app-header ${root ? "root-header" : "detail-header"}">${root ? `<button class="mobile-brand brand" data-tab="home">${icon("leaf")} ingredi<span>.</span></button><span class="desktop-location">${icon("pin")} ${escape(state.profile?.city || d.profile.city)}</span><button class="account-avatar" data-tab="my" aria-label="My profile">${avatar(state.profile?.display_name || d.profile.display_name)}</button>` : `<button class="icon-button" data-action="back" aria-label="Back">${icon("back")}</button><strong>${escape(headerTitle)}</strong>${route.view === "compose" ? '<button class="text-button" data-action="save-draft">Save draft</button>' : '<span class="header-spacer"></span>'}`}</header><main id="main-content" tabindex="-1" class="page ${route.view}-page">${state.error ? `<div class="error-banner" role="alert"><span>${escape(state.error)}</span><button class="icon-button" data-action="dismiss-error" aria-label="Dismiss error">${icon("close")}</button></div>` : ""}${state.storageError ? `<div class="error-banner" role="alert"><span>${escape(state.storageError)}</span><button class="text-button" data-action="retry-storage">Retry</button></div>` : ""}${root && ["home", "cook"].includes(route.view) ? `<div class="kitchen-status"><span class="status-dot ${state.signed ? "connected" : ""}"></span>${state.loading ? "Opening your kitchen…" : state.signed ? "Private fridge · account connected" : "Sample fridge · on this device"}${!state.signed ? '<button class="text-button" data-action="auth">Sign in</button>' : ""}</div>` : ""}${content}</main>${root ? `<nav class="mobile-nav" aria-label="Mobile navigation">${navButtons}</nav>` : ""}</div>`;
+  if (route.view === 'nearby' && state.nearby.view === 'map') {
+    const posts=filterPosts(d.posts,state.nearby);
+    disposeMap=mountMap({element:$('#nearby-map-canvas'),posts,selected:state.selectedPost||posts[0]?.id,view:state.mapView||DEFAULT_VIEW,location:state.mapLocation,onSelect:id=>{state.selectedPost=id;render();},onView:view=>{state.mapView=view;}});
+  }
   if (route.view === "chat") requestAnimationFrame(() => {
     $(".chat-messages")?.lastElementChild?.scrollIntoView({ block: "nearest" });
   });
@@ -172,6 +180,8 @@ async function sessionChanged() {
   state.recipes = [];
   state.scans = [];
   state.profile = null;
+  state.mapLocation = null;
+  state.mapView = null;
   state.staged = [];
   state.composer = null;
   state.cook = { search: "", tags: [] };
@@ -271,9 +281,23 @@ async function action(name) {
     return;
   }
   if (name === "center-map") {
-    state.selectedPost = null;
-    render();
-    toast("Centered on the sample neighborhood.");
+    if(state.locating)return;
+    state.locating=true;render();
+    const generation=identityGeneration;
+    try {
+      const location=await currentPosition();
+      if(generation!==identityGeneration)return;
+      state.mapLocation=location;state.mapView={center:location,zoom:15};
+      toast('Centered on your location. Demo posts stay in Ann Arbor.');
+    } catch {
+      if(generation!==identityGeneration)return;
+      state.mapView=DEFAULT_VIEW;state.mapLocation=null;
+      toast('Location unavailable or denied. Showing the Ann Arbor demo.');
+    } finally {state.locating=false;render();}
+    return;
+  }
+  if(name==='ann-arbor') {
+    state.mapView=DEFAULT_VIEW;state.mapLocation=null;state.selectedPost=null;render();
     return;
   }
   if (name === "nearby-filters") {

@@ -3,9 +3,13 @@ export const photoPermissions = {
   NSPhotoLibraryUsageDescription:'Choose a receipt photo to review and add ingredients to your fridge.',
   NSPhotoLibraryAddUsageDescription:'Ingredi can save a receipt photo only when you choose to save it.',
 };
+export const locationPermissions = {
+  NSLocationWhenInUseUsageDescription:'Ingredi uses your location when you tap Use my location to center the Nearby map. Demo posts remain in Ann Arbor.',
+  NSLocationAlwaysAndWhenInUseUsageDescription:'Ingredi uses your location when you tap Use my location to center the Nearby map. Demo posts remain in Ann Arbor.',
+};
 
 export function ensurePhotoPermissions(plist) {
-  for (const [key,description] of Object.entries(photoPermissions)) {
+  for (const [key,description] of Object.entries({...photoPermissions,...locationPermissions})) {
     const pattern=new RegExp(`\\s*<key>${key}</key>\\s*<string>([\\s\\S]*?)</string>`,'g');
     const existing=[...plist.matchAll(pattern)][0]?.[1];
     plist=plist.replace(pattern,'');

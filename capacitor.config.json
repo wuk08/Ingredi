@@ -2,6 +2,7 @@
   "appId": "com.ingredi.demo",
   "appName": "Ingredi",
   "webDir": "dist",
+  "appendUserAgent": "Ingredi/0.1 (+https://github.com/wuk08/Ingredi)",
   "ios": {
     "contentInset": "never",
     "preferredContentMode": "mobile",

@@ -3672,6 +3672,16 @@ button.button.small,
 }
 .account-avatar { min-height: 44px; min-width: 44px; }
 .map-marker { min-width: 44px; min-height: 44px; }
+.map-canvas { position: absolute; inset: 0; z-index: 0; background: #e8eddf; }
+.map-canvas .leaflet-control-attribution { max-width: 230px; font-size: 10px; line-height: 1.5; background: #fffffff2; }
+.map-canvas .leaflet-control-zoom a { width: 40px; height: 40px; line-height: 40px; }
+.real-map-pin { display: grid; place-items: center; border: 3px solid white; border-radius: 50%; background: #829871; color: white; box-shadow: 0 2px 8px #25382e44; }
+.real-map-pin.selected { background: var(--green); }
+.real-map-pin .icon { width: 22px; height: 22px; }
+.map-scope { position: absolute; top: 44px; right: 10px; z-index: 3; background: #fffffff0; border-radius: 10px; padding: 6px 9px; font-size: 10px; color: #52634a; pointer-events: none; }
+.map-demo-reset { position: absolute; top: 86px; right: 10px; z-index: 3; font-size: 11px; box-shadow: 0 2px 8px #25382e11; }
+.map-load-notice { position: absolute; top: 145px; left: 14px; right: 14px; z-index: 450; background: #fff8e9; color: #766244; padding: 12px; border-radius: 10px; font: 12px/1.5 -apple-system,sans-serif; }
+.map-load-notice[hidden] { display: none; }
 .group-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-top: 24px; }
 .group-grid .group-card { width: 100%; }
 .post-byline, .recipe-caption > span, .group-card > div > small,
