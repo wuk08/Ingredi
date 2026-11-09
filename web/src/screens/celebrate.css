@@ -1,0 +1,20 @@
+/* Celebration animations (Scan added, Shared!). All off under prefers-reduced-motion via global.css. */
+@keyframes sd-disc{0%{transform:scale(.3);opacity:0}100%{transform:scale(1);opacity:1}}
+@keyframes sd-orbit{0%{transform:rotate(0)}100%{transform:rotate(240deg)}}
+@keyframes sd-in-a{0%{transform:translate(-44px,-38px) scale(1);opacity:0}10%{opacity:1}85%{opacity:1}100%{transform:translate(0,0) scale(.25);opacity:0}}
+@keyframes sd-in-b{0%{transform:translate(44px,-38px) scale(1);opacity:0}10%{opacity:1}85%{opacity:1}100%{transform:translate(0,0) scale(.25);opacity:0}}
+@keyframes sd-in-c{0%{transform:translate(0,46px) scale(1);opacity:0}10%{opacity:1}85%{opacity:1}100%{transform:translate(0,0) scale(.25);opacity:0}}
+@keyframes sd-pop{0%{transform:scale(0)}100%{transform:scale(1)}}
+@keyframes sd-tick{0%{stroke-dashoffset:1}100%{stroke-dashoffset:0}}
+@keyframes sd-spark{0%{transform:translateY(0) scale(1);opacity:0}20%{opacity:1}100%{transform:translateY(-44px) scale(.4);opacity:0}}
+@keyframes ig-fall{0%{transform:translateY(-30px) rotate(0deg);opacity:1}100%{transform:translateY(520px) rotate(320deg);opacity:0}}
+@keyframes sc-pop{0%{transform:scale(.4);opacity:0}60%{transform:scale(1.12);opacity:1}100%{transform:scale(1);opacity:1}}
+@keyframes sc-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+@keyframes ig-shoot-l{0%{transform:translateY(0) scaleY(.3);opacity:1}70%{opacity:1}100%{transform:translateY(-130px) scaleY(1);opacity:0}}
+@keyframes ig-shoot-m{0%{transform:translateY(0) scaleY(.3);opacity:1}70%{opacity:1}100%{transform:translateY(-95px) scaleY(1);opacity:0}}
+@keyframes ig-shoot-s{0%{transform:translateY(0) scaleY(.3);opacity:1}70%{opacity:1}100%{transform:translateY(-60px) scaleY(1);opacity:0}}
+@keyframes ig-ring{0%{transform:scale(.2);opacity:.9}100%{transform:scale(6);opacity:0}}
+@keyframes ig-apple-in{0%{transform:scale(0) rotate(-20deg)}60%{transform:scale(1.1) rotate(6deg)}100%{transform:scale(1) rotate(0)}}
+@keyframes ig-apple-spin{0%{transform:rotate(0) scale(1);opacity:1}70%{opacity:1}100%{transform:rotate(200deg) scale(.45);opacity:0}}
+@keyframes ig-gift-spin{0%{transform:rotate(-160deg) scale(.45);opacity:0}25%{opacity:1}100%{transform:rotate(0) scale(1);opacity:1}}
+@media (prefers-reduced-motion: reduce) { .sd-food, .ig-apple { display: none; } }
