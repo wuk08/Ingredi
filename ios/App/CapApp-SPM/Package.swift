@@ -12,7 +12,8 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/ionic-team/capacitor-swift-pm.git", exact: "8.6.0"),
-        .package(name: "CapacitorCamera", path: "../../../node_modules/.pnpm/@capacitor+camera@8.2.6_@capacitor+core@8.6.0/node_modules/@capacitor/camera")
+        .package(name: "CapacitorCamera", path: "../../../node_modules/.pnpm/@capacitor+camera@8.2.6_@capacitor+core@8.6.0/node_modules/@capacitor/camera"),
+        .package(name: "CapacitorGeolocation", path: "../../../node_modules/.pnpm/@capacitor+geolocation@8.2.4_@capacitor+core@8.6.0/node_modules/@capacitor/geolocation")
     ],
     targets: [
         .target(
@@ -20,7 +21,8 @@ let package = Package(
             dependencies: [
                 .product(name: "Capacitor", package: "capacitor-swift-pm"),
                 .product(name: "Cordova", package: "capacitor-swift-pm"),
-                .product(name: "CapacitorCamera", package: "CapacitorCamera")
+                .product(name: "CapacitorCamera", package: "CapacitorCamera"),
+                .product(name: "CapacitorGeolocation", package: "CapacitorGeolocation")
             ]
         )
     ]

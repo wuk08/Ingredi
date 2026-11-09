@@ -9,7 +9,7 @@ const signIn = { height: 52, borderRadius: 999, border: 0, display: "flex", alig
 export function Login() {
   const go = useNavigate();
   return (
-    <div style={{ flex: 1, background: "var(--surface-muted)", display: "flex", flexDirection: "column", padding: "0 16px 56px" }}>
+    <div style={{ flex: 1, background: "var(--surface-muted)", display: "flex", flexDirection: "column", padding: "var(--safe-top) 16px max(56px, calc(var(--safe-bottom) + 22px))" }}>
       <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12 }}>
         <h1 style={{ margin: 0, lineHeight: 0 }}><Logotype /></h1>
         <p className="body" style={{ margin: 0, color: "var(--text-secondary)", textAlign: "center" }}>Cook what you have.<br />Share what you don't need.</p>

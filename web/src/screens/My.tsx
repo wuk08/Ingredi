@@ -20,7 +20,7 @@ export function My() {
   const { tokens, points } = useStore();
   const next = 1500;
   return (
-    <main className="screen-scroll" style={{ padding: "56px 16px 24px", gap: 22 }}>
+    <main className="screen-scroll" style={{ padding: "var(--screen-top) 16px 24px", gap: 22 }}>
       <section style={{ display: "flex", alignItems: "center", gap: 14 }}>
         <Avatar name="Jason Park" size={72} />
         <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4 }}>

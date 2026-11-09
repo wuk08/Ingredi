@@ -16,7 +16,7 @@ export function ScanDone() {
   useEffect(() => { const t = setTimeout(() => setRun(1), 150); return () => clearTimeout(t); }, []);
   return (
     <>
-      <main className="screen-scroll" style={{ padding: "96px 16px 24px", gap: 24 }}>
+      <main className="screen-scroll" style={{ padding: "max(96px, calc(var(--safe-top) + 52px)) 16px 24px", gap: 24 }}>
         <section style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, textAlign: "center" }}>
           <button type="button" aria-label="Play again" onClick={() => setRun(run + 1)} style={{ width: 140, height: 140, border: 0, padding: 0, background: "transparent", cursor: "pointer", marginTop: -24 }}>
             {run > 0 && <span key={run} style={{ display: "block" }} dangerouslySetInnerHTML={{ __html: fridgeAddedSvg }} />}

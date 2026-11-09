@@ -7,6 +7,8 @@
     "dev": "node scripts/serve.mjs",
     "start": "node scripts/serve.mjs",
     "build": "node scripts/build.mjs",
+    "web:dev": "vite web --config web/vite.config.ts",
+    "web:build": "tsc -b web && vite build web --config web/vite.config.ts",
     "build:ios": "node scripts/build-ios.mjs",
     "ios:prepare": "node scripts/prepare-ios.mjs",
     "ios:open": "cap open ios",
@@ -21,10 +23,18 @@
     "@capacitor/core": "8.6.0",
     "@capacitor/geolocation": "8.2.4",
     "@capacitor/ios": "8.6.0",
-    "maplibre-gl": "6.16.0"
+    "maplibre-gl": "6.16.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "react-router-dom": "6.26.2"
   },
   "devDependencies": {
     "@capacitor/cli": "8.6.0",
-    "esbuild": "0.28.2"
+    "@types/react": "18.3.11",
+    "@types/react-dom": "18.3.0",
+    "@vitejs/plugin-react": "4.3.2",
+    "esbuild": "0.28.2",
+    "typescript": "5.6.3",
+    "vite": "5.4.8"
   }
 }

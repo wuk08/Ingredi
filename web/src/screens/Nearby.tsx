@@ -65,7 +65,7 @@ export function Nearby() {
           )}
         </>
       ) : (
-        <main style={{ position: "absolute", inset: 0, overflowY: "auto", padding: "200px 16px 88px", display: "flex", flexDirection: "column", gap: 10 }}>
+        <main style={{ position: "absolute", inset: 0, overflowY: "auto", padding: "calc(var(--overlay-top) + 148px) 16px 88px", display: "flex", flexDirection: "column", gap: 10 }}>
           <p className="small" style={{ margin: "0 0 2px" }}>{list.length} posts within 1 mi</p>
           {list.map((p) => (
             <Link key={p.id} to="/post" className="card" style={{ display: "flex", gap: 12, padding: 10, flexShrink: 0 }}>
@@ -75,7 +75,7 @@ export function Nearby() {
         </main>
       )}
 
-      <header style={{ position: "absolute", left: 0, right: 0, top: 0, padding: "52px 16px 12px", display: "flex", flexDirection: "column", gap: 10,
+      <header style={{ position: "absolute", left: 0, right: 0, top: 0, padding: "var(--overlay-top) 16px 12px", display: "flex", flexDirection: "column", gap: 10,
         background: isMap ? "transparent" : "var(--bg)", boxShadow: isMap ? undefined : "0 1px 0 var(--divider)" }}>
         <div style={{ display: "flex", gap: 8 }}>
           <label style={{ flex: 1, height: 48, borderRadius: 24, background: "#fff", boxShadow: floatShadow, display: "flex", alignItems: "center", gap: 10, padding: "0 16px" }}>

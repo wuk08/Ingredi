@@ -11,7 +11,7 @@ const chevron = <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stro
 export function Home() {
   const { unreadNotifs } = useStore();
   return (
-    <div className="screen-scroll" style={{ padding: "56px 0 24px", gap: 28 }}>
+    <div className="screen-scroll" style={{ padding: "var(--screen-top) 0 24px", gap: 28 }}>
       <header style={{ padding: "0 16px", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <h1 className="h1">Good morning, Jason!</h1>

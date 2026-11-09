@@ -39,7 +39,7 @@ export function PostDone() {
 
   return (
     <>
-      <main className="screen-scroll" style={{ padding: "96px var(--space-4) var(--space-6)", gap: "var(--space-6)" }}>
+      <main className="screen-scroll" style={{ padding: "max(96px, calc(var(--safe-top) + 52px)) var(--space-4) var(--space-6)", gap: "var(--space-6)" }}>
         <section style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "var(--space-3)", textAlign: "center" }}>
           <button type="button" aria-label="Play again" onClick={() => setRun(run + 1)}
             style={{ width: 140, height: 140, border: 0, padding: 0, background: "transparent", cursor: "pointer", marginTop: -24 }}>

@@ -10,7 +10,7 @@ export function Messages() {
   const threads: { name: string; by?: PersonaName; art?: IllustrationName; tint?: string; time: string; context: string; last: string; unread: number }[] = tab === "dm" ? dmThreads : groupThreads;
   return (
     <>
-      <header style={{ flexShrink: 0, padding: "56px 16px 12px", display: "flex", flexDirection: "column", gap: 14 }}>
+      <header style={{ flexShrink: 0, padding: "var(--screen-top) 16px 12px", display: "flex", flexDirection: "column", gap: 14 }}>
         <h1 className="h1">Message</h1>
         <div role="tablist" className="seg">
           <button role="tab" aria-selected={tab === "dm"} onClick={() => setTab("dm")}>1:1</button>

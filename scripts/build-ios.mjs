@@ -1,10 +1,32 @@
-import { build } from 'esbuild';
+import { spawnSync } from 'node:child_process';
 import { readFile, writeFile } from 'node:fs/promises';
-import './build.mjs';
-import { config } from '../public/config.js';
+import { build } from 'vite';
 
-await build({entryPoints:['public/app.js'],outfile:'dist/app.js',bundle:true,format:'esm',platform:'browser',target:'safari16',minify:false,logLevel:'info'});
-const csp=`default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob: data: https://tiles.openfreemap.org; worker-src 'self'; connect-src 'self' https://tiles.openfreemap.org https://*.supabase.co ${new URL(config.geocoderUrl).origin}; object-src 'none'; base-uri 'self'; form-action 'self'`;
+function run(command, args) {
+  const result = spawnSync(command, args, { stdio: 'inherit' });
+  if (result.error) throw result.error;
+  if (result.status !== 0) process.exit(result.status || 1);
+}
+
+const executable = (name) => `node_modules/.bin/${name}${process.platform === 'win32' ? '.cmd' : ''}`;
+
+// Type-check the prototype before packaging it. Vite then emits directly into
+// Capacitor's configured webDir so the native project and browser prototype use
+// the same UI implementation.
+run(executable('tsc'), ['-b', 'web']);
+await build({
+  root: 'web',
+  configFile: 'web/vite.config.ts',
+  base: '/',
+  build: {
+    outDir: '../dist',
+    emptyOutDir: true,
+  },
+});
+
+// React uses element.style for the prototype's token-driven layout, so style
+// attributes must remain allowed. Scripts and network access stay local-only.
+const csp = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data: https://tiles.openfreemap.org; font-src 'self'; worker-src 'self'; connect-src 'self' https://tiles.openfreemap.org; object-src 'none'; base-uri 'self'; form-action 'self'";
 const html=await readFile('dist/index.html','utf8');
 await writeFile('dist/index.html',html.replace('<head>',`<head>\n  <meta http-equiv="Content-Security-Policy" content="${csp}">`));
-console.log('Built the bundled iOS frontend. Calls use the hosted Supabase backend; no local server is needed.');
+console.log('Built the React prototype as the bundled iOS frontend. No local server is needed.');

@@ -27,7 +27,7 @@ node scripts/build.mjs
 
 The native Xcode project is in `ios/`. Follow [the Mac/iPhone demo guide](docs/IOS-DEMO.md): install Xcode and Node, install the pinned dependencies, then run `ios:prepare` and `ios:open`. A Simulator or personal-device build is sufficient; no public release or TestFlight is needed. The guide includes the free Apple Account route.
 
-Native receipt capture offers **Take photo**, **Choose Photos**, and **Load demo photo for live AI**. Images still require explicit consent before the existing server-side extraction. The interface is bundled on-device; it does not depend on the Windows preview server. Xcode compilation and physical-camera testing must be completed on the Mac.
+The iOS target now bundles the React prototype from `web/`, so its screens, flows, tokens, and interactions match the current web UI. The receipt screen opens the native camera or photo library on iOS, then continues through the prototype review flow. Prototype data remains local mock data; the existing backend-connected application is still in `public/`. The interface is bundled on-device and does not depend on a preview server.
 
 For ongoing Windows/Mac development, follow [the GitHub sync workflow](docs/SYNC-WORKFLOW.md). Pull the current source on the Mac, run `ios:prepare`, then run it in Xcode. Pushing code to GitHub alone does not update an installed app or deploy a Supabase function.
 
@@ -94,7 +94,7 @@ The latest Supabase advisor reports one Auth setting warning: [leaked-password p
 - `public/`: static browser app, styles, public config and shared domain logic.
 - `public/features/`: kitchen/community views and the existing receipt/auth flows adapted to the new shell.
 - `public/lib/`: navigation, shared UI/illustrations, recipe discovery, kitchen access, and the account-scoped community repository.
-- `ios/`: generated Xcode demo project with the Capacitor camera plugin and permission descriptions.
+- `ios/`: generated Xcode demo project that bundles the `web/` prototype with Capacitor camera permissions.
 - `supabase/functions/scan-receipt/`: server-only image extraction pipeline.
 - `supabase/migrations/`: incremental changes applied to the existing project.
 - `supabase/tests/security.sql`: disposable, rolled-back backend security tests.

@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Camera } from "@capacitor/camera";
+import { Capacitor } from "@capacitor/core";
+import { useNavigate } from "react-router-dom";
 import { CloseIcon } from "../components/Icons";
 
 const widths = [62, 48, 70, 54, 44, 66, 58, 50, 40];
@@ -14,7 +16,36 @@ export function ScanCamera() {
   const nav = useNavigate();
   const [mode, setMode] = useState<"Receipt" | "Groceries">("Receipt");
   const [flash, setFlash] = useState(false);
+  const [busy, setBusy] = useState<"camera" | "photos" | null>(null);
+  const [error, setError] = useState("");
   const r = mode === "Receipt";
+
+  const capture = async (source: "camera" | "photos") => {
+    if (!Capacitor.isNativePlatform()) {
+      nav("/scan/review");
+      return;
+    }
+
+    setBusy(source);
+    setError("");
+    try {
+      const options = { quality: 85, targetWidth: 1800, targetHeight: 2400, correctOrientation: true };
+      const photo = source === "camera"
+        ? await Camera.takePhoto({ ...options, saveToGallery: false })
+        : (await Camera.chooseFromGallery({ ...options, allowMultipleSelection: false })).results?.[0];
+      if (photo) nav("/scan/review");
+    } catch (caught) {
+      const message = caught instanceof Error ? caught.message : String(caught);
+      if (!/cancel|no image picked|no media selected/i.test(message)) {
+        setError(/permission|denied|access/i.test(message)
+          ? "Camera or photo access is off. Allow it in Settings and try again."
+          : "That photo could not be opened. Please try another one.");
+      }
+    } finally {
+      setBusy(null);
+    }
+  };
+
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", background: "#1E1B18", color: "#fff" }}>
       <header className="topbar" style={{ paddingBottom: 12 }}>
@@ -64,13 +95,16 @@ export function ScanCamera() {
         {r ? <>Fit the whole receipt in the frame.<br />We’ll read the food items for you.</> : "Lay your groceries out and snap. We’ll recognize what’s there."}
       </p>
 
-      <div style={{ flexShrink: 0, height: 150, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 40px 12px" }}>
-        <button type="button" aria-label="Choose from photos" style={{ width: 52, height: 52, borderRadius: 12, border: "2px solid rgba(255,255,255,.6)", background: "#34302B", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+      {error && <p role="alert" style={{ margin: "8px 24px 0", color: "#FFD7CF", textAlign: "center", fontSize: 13 }}>{error}</p>}
+      <div style={{ flexShrink: 0, minHeight: 150, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 40px max(12px, var(--safe-bottom))" }}>
+        <button type="button" aria-label="Choose from photos" disabled={busy !== null} onClick={() => void capture("photos")}
+          style={{ width: 52, height: 52, borderRadius: 12, border: "2px solid rgba(255,255,255,.6)", background: "#34302B", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", opacity: busy ? 0.6 : 1 }}>
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" /><circle cx="9" cy="10" r="1.5" /><path d="m21 16-5-5-8 8" /></svg>
         </button>
-        <Link to="/scan/review" aria-label="Take photo" style={{ width: 76, height: 76, borderRadius: 38, border: "4px solid #fff", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <button type="button" aria-label={busy === "camera" ? "Opening camera" : "Take photo"} aria-busy={busy === "camera"} disabled={busy !== null}
+          onClick={() => void capture("camera")} style={{ width: 76, height: 76, borderRadius: 38, border: "4px solid #fff", padding: 0, background: "transparent", display: "flex", alignItems: "center", justifyContent: "center", opacity: busy ? 0.72 : 1 }}>
           <span style={{ width: 60, height: 60, borderRadius: 30, background: "#fff" }} />
-        </Link>
+        </button>
         <span style={{ width: 52, textAlign: "center", fontSize: 12, color: "#B3A79B" }}>{r ? "Long receipt? Take 2+" : ""}</span>
       </div>
     </div>

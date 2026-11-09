@@ -1,6 +1,6 @@
 # Run Ingredi on your MacBook or iPhone
 
-This setup is for your competition demo. The app bundles its interface locally and uses the existing Supabase backend. You do not need a public App Store release or TestFlight.
+This setup is for the current React prototype running as a bundled iOS app. It uses the same screens and interactions as `web/`; its sample content is local mock data. You do not need a public App Store release or TestFlight.
 
 ## 1. Put the project on your Mac
 
@@ -22,11 +22,9 @@ The prepare command builds the frontend, synchronizes Capacitor, and configures 
 
 In Xcode, choose the **App** scheme and an installed **iPhone Simulator**, then click **Run ▶**. A Simulator does not need a physical iPhone or signing team.
 
-Sign in with the confirmed Ingredi email/password account you already created. The installed app has its own session storage, so it will not inherit your browser login. Supabase data is shared after signing in.
+Continue from the prototype login screen, then explore Home, Cook, Nearby, Message, and My. Choose **Cook → Fill up fridge → Scan receipt** to exercise the updated scan UI.
 
-Choose **Cook → Fill up fridge → Scan a receipt → Load demo photo for live AI**, check the OpenAI consent box, then choose **Read my receipt**. This sends the bundled synthetic image through the real server-side AI pipeline. Review the items and confirm them into your fridge.
-
-The Simulator has no physical camera. Use the bundled image or import a receipt image into its Photos app and choose **Choose Photos**. **Use the sample receipt** is the separate preset-extraction fallback.
+The Simulator has no physical camera. Import a receipt into its Photos app and use the gallery button. On a real iPhone, the shutter button opens the native camera. Selecting an image continues to the prototype review screen; the prototype does not upload or extract the image.
 
 ## 3. Demo on your own iPhone
 
@@ -35,18 +33,15 @@ The Simulator has no physical camera. Use the bundled image or import a receipt 
 3. Select the **App** target → **Signing & Capabilities**. Enable automatic signing and choose your **Personal Team**.
 4. If Xcode says the bundle identifier is unavailable, choose a unique identifier, such as `com.yourname.ingredi.demo`, in `capacitor.config.json` and the Xcode target.
 5. Select your iPhone as the run destination and press **Run ▶**. Follow Xcode’s device setup instructions, including enabling Developer Mode on the iPhone if requested.
-6. Open Ingredi and sign in. Use **Take photo** to photograph a receipt, or **Choose Photos** for a saved image. Photo selection does not upload anything until you approve the consent box and tap **Read my receipt**.
+6. Open Ingredi and continue from the prototype login screen. Use the shutter button to photograph a receipt, or the gallery button for a saved image. The prototype keeps this flow local and does not upload the selected image.
 
 A free Apple Account supports personal-device testing. Its provisioning profiles expire after 7 days, so rebuild/reinstall close to competition day. You do not need a paid developer membership for this route. [Apple’s Personal Team limits](https://developer.apple.com/help/account/basics/about-your-developer-account#enable-a-personal-team-in-xcode)
 
 ## Demo checklist
 
-- Run the live scan once on the actual presentation device before the event.
-- Keep the Mac/iPhone connected to Wi-Fi or a hotspot for Supabase and OpenAI.
-- Use the bundled synthetic image for a predictable receipt with no personal details.
-- Keep the preset sample receipt ready as a fallback. Signed in, it still saves to the real backend; signed out, it works locally.
-- Sign in before presenting and keep your password/API key out of the presentation.
-- Backend secrets remain in Supabase. No AI or Supabase server key belongs in Xcode or the app bundle.
+- Run the camera and gallery transitions once on the actual presentation device before the event.
+- Walk through all five tabs once after reinstalling so the presentation path is familiar.
+- Keep passwords and API keys out of the presentation and out of the app bundle.
 
 ## Updating the demo
 
@@ -54,8 +49,6 @@ After changing the web code, run `npx --yes pnpm@11.25.0 ios:prepare` on the Mac
 
 ## What has been checked here
 
-The bundled JavaScript build and native configuration checks pass, including camera/gallery file validation, cancellation and permission-error handling, and root-level iOS permission descriptions. The existing receipt/backend tests also pass. The Xcode project was generated with Capacitor and uses Swift Package Manager.
-
-This project was prepared on Windows. **Xcode compilation, Simulator execution and physical-camera testing still need to be done on the Mac.** No native build or signing success is claimed yet.
+The bundled React build and native configuration checks cover camera/gallery cancellation, permission-error handling, and root-level iOS permission descriptions. The Xcode project uses Capacitor and Swift Package Manager.
 
 References: [Capacitor iOS setup](https://capacitorjs.com/docs/ios), [environment requirements](https://capacitorjs.com/docs/getting-started/environment-setup), [camera API and permissions](https://capacitorjs.com/docs/apis/camera).

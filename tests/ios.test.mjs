@@ -41,4 +41,8 @@ test('native demo uses bundled assets and includes the camera plugin',async()=>{
   for(const key of Object.keys(photoPermissions))assert.ok(plist.includes(`<key>${key}</key>`));
   const swift=await readFile(new URL('../ios/App/CapApp-SPM/Package.swift',import.meta.url),'utf8');
   assert.match(swift,/CapacitorCamera/);assert.ok(!swift.includes('C:\\Users'));
+  const build=await readFile(new URL('../scripts/build-ios.mjs',import.meta.url),'utf8');
+  assert.match(build,/root:\s*'web'/);assert.doesNotMatch(build,/public\/app\.js/);
+  const scanner=await readFile(new URL('../web/src/screens/ScanCamera.tsx',import.meta.url),'utf8');
+  assert.match(scanner,/Camera\.takePhoto/);assert.match(scanner,/Camera\.chooseFromGallery/);
 });

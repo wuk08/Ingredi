@@ -68,7 +68,7 @@ export function Shared() {
           {CONFETTI.map((s, i) => <span key={i} style={s} />)}
         </div>
       )}
-      <header style={{ flexShrink: 0, padding: "52px 16px 0", display: "flex", justifyContent: "flex-end" }}>
+      <header style={{ flexShrink: 0, padding: "var(--overlay-top) 16px 0", display: "flex", justifyContent: "flex-end" }}>
         <Link to="/home" aria-label="Close" className="icon-btn"><CloseIcon /></Link>
       </header>
 

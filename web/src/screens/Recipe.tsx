@@ -22,10 +22,10 @@ export function Recipe() {
     <>
       <main className="screen-scroll" style={{ gap: 20, paddingBottom: 24 }}>
         <div role="img" aria-label={recipe.name} style={{ height: 260, position: "relative", background: `var(--surface-muted) url("${recipe.photo}") center / cover no-repeat` }}>
-          <button type="button" className="icon-btn icon-btn--over-media" aria-label="Back" style={{ position: "absolute", left: 16, top: 52 }}
+          <button type="button" className="icon-btn icon-btn--over-media" aria-label="Back" style={{ position: "absolute", left: 16, top: "var(--overlay-top)" }}
             onClick={() => (window.history.state?.idx ? nav(-1) : nav("/cook"))}><BackIcon /></button>
           <button type="button" className="icon-btn icon-btn--over-media" aria-label={saved ? "Saved" : "Save recipe"} aria-pressed={saved}
-            style={{ position: "absolute", right: 16, top: 52 }} onClick={() => setSaved(!saved)}>
+            style={{ position: "absolute", right: 16, top: "var(--overlay-top)" }} onClick={() => setSaved(!saved)}>
             <BookmarkIcon filled={saved} color={saved ? "var(--primary)" : undefined} />
           </button>
         </div>

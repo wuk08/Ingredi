@@ -15,7 +15,7 @@ export function Cook() {
   const pick = { name: pickName, ...recipeHave(pickName) };
 
   return (
-    <div className="screen-scroll" style={{ padding: "56px 0 24px", gap: 26 }}>
+    <div className="screen-scroll" style={{ padding: "var(--screen-top) 0 24px", gap: 26 }}>
       <section style={{ padding: "0 16px", display: "flex", flexDirection: "column", gap: 14 }}>
         <header style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
           <h1 className="h1">What should we cook today?</h1>
