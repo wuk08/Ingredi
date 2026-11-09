@@ -9,6 +9,18 @@ test('React state bridge retains Supabase kitchen and persistent community repos
   for (const expected of ['signIn', 'signUp', 'signOut', 'kitchen.load()', 'kitchen.add', 'kitchen.remove', 'kitchen.setDate', 'scanReceipt', 'confirm_receipt', 'new DemoRepository']) assert.match(state, new RegExp(expected.replace(/[().]/g, '\\$&')));
 });
 
+test('mock Apple and Google entry points preserve real email and password authentication', async () => {
+  const [login, state, api] = await Promise.all([
+    source('web/src/screens/Login.tsx'),
+    source('web/src/data/AppState.tsx'),
+    source('public/lib/api.mjs'),
+  ]);
+  for (const provider of ['Apple', 'Google']) assert.match(login, new RegExp(`Sign (?:in|up) with ${provider}`));
+  assert.match(login, /mockAuthenticate/);assert.match(login, /type="email"/);assert.match(login, /type="password"/);
+  assert.match(state, /No provider data was sent/);assert.doesNotMatch(state, /signInWithOAuth/);
+  assert.match(api, /grant_type=password/);assert.match(api, /auth\/v1\/signup/);
+});
+
 test('new UI exposes original residence, verification, scope, messaging, and exchange actions', async () => {
   const [dialogs, nearby, map, chat, post, group, profile] = await Promise.all([
     source('web/src/components/CommunityDialogs.tsx'),

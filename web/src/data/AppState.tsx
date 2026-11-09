@@ -11,10 +11,12 @@ export type CommunityData = Record<string, any>;
 export type ScanCandidate = { id: string; status: string; extracted_items: any[]; metadata?: Record<string, any>; local?: boolean };
 
 type Dialog = "setup" | "verify" | null;
+type MockProvider = "Apple" | "Google" | "";
 type AppStateValue = {
   loading: boolean;
   busy: boolean;
   signed: boolean;
+  mockProvider: MockProvider;
   error: string;
   notice: string;
   pantry: PantryItem[];
@@ -30,6 +32,7 @@ type AppStateValue = {
   clearError: () => void;
   refresh: () => Promise<void>;
   enterDemo: () => Promise<void>;
+  mockAuthenticate: (provider: Exclude<MockProvider, "">, mode: "signin" | "signup") => Promise<void>;
   authenticate: (mode: "signin" | "signup", email: string, password: string) => Promise<"connected" | "confirm">;
   logout: () => Promise<void>;
   addPantry: (items: any[]) => Promise<void>;
@@ -56,6 +59,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [signed, setSigned] = useState(Boolean(getSession()));
+  const [mockProvider, setMockProvider] = useState<MockProvider>(() => (localStorage.getItem("ingredi.mock-provider") as MockProvider) || "");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [pantry, setPantry] = useState<PantryItem[]>([]);
@@ -86,6 +90,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       if (nextSigned) nextProfile = (await kitchen.profile()) || nextProfile;
       if (ticket !== generation.current) return;
       setSigned(nextSigned);
+      if (nextSigned) { localStorage.removeItem("ingredi.mock-provider"); setMockProvider(""); }
       setCommunity(copy(communityData));
       setPantry(kitchenData.pantry || []);
       setRecipes(kitchenData.recipes || []);
@@ -119,8 +124,18 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
   const enterDemo = useCallback(async () => {
     localStorage.setItem("ingredi.demo-entered", "1");
+    localStorage.removeItem("ingredi.mock-provider");
+    setMockProvider("");
     if (!kitchen.localPantry().length) setPantry(kitchen.seedLocalPantry());
     setNotice("Sample kitchen opened. Community activity stays on this device.");
+  }, []);
+
+  const mockAuthenticate = useCallback(async (provider: Exclude<MockProvider, "">, mode: "signin" | "signup") => {
+    localStorage.setItem("ingredi.demo-entered", "1");
+    localStorage.setItem("ingredi.mock-provider", provider);
+    setMockProvider(provider);
+    if (!kitchen.localPantry().length) setPantry(kitchen.seedLocalPantry());
+    setNotice(`${provider} ${mode === "signup" ? "sign-up" : "sign-in"} opened in prototype mode. No provider data was sent.`);
   }, []);
 
   const authenticate = useCallback(async (mode: "signin" | "signup", email: string, password: string) => {
@@ -129,6 +144,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     try {
       const result = await (mode === "signup" ? signUp(email, password) : signIn(email, password));
       if (mode === "signup" && !result.access_token) return "confirm" as const;
+      localStorage.removeItem("ingredi.mock-provider");
+      setMockProvider("");
       await loadIdentity();
       setNotice("Your private Supabase kitchen is connected.");
       return "connected" as const;
@@ -230,9 +247,9 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   }, [loadIdentity, pantry]);
 
   const value: AppStateValue = {
-    loading, busy, signed, error, notice, pantry, recipes, scans, profile,
+    loading, busy, signed, mockProvider, error, notice, pantry, recipes, scans, profile,
     community: visibleCommunity, home, setupReady, verificationNeeded, dialog, setDialog,
-    clearError: () => setError(""), refresh: loadIdentity, enterDemo, authenticate, logout,
+    clearError: () => setError(""), refresh: loadIdentity, enterDemo, mockAuthenticate, authenticate, logout,
     addPantry, removePantry, setPantryDate, updateProfile: saveProfile, runCommunity,
     ensureCommunity, resetCommunity, startReceiptScan, confirmReceipt,
   };

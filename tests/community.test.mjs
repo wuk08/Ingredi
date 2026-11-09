@@ -63,6 +63,13 @@ test('publishing a meal prep post creates its group and host dish',()=>{
 test('messages persist, replies are labeled by sample sender, and read clears unread',async()=>{
   const storage=new MemoryStorage(),repo=new DemoRepository('a',storage);await repo.load();await repo.run('read','share-carrots');await repo.run('send',{id:'share-carrots',text:'Around six works!'});await repo.load();const chat=repo.data.conversations.find(c=>c.id==='share-carrots');assert.equal(chat.unread,0);assert.equal(chat.messages.at(-2).text,'Around six works!');assert.equal(chat.messages.at(-1).sender,'jack');
 });
+test('sample inbox includes several direct chats and a pre-existing group chat',()=>{
+  const data=seedCommunity(),direct=data.conversations.filter(chat=>!chat.groupId),groups=data.conversations.filter(chat=>chat.groupId);
+  assert.deepEqual(direct.map(chat=>chat.person),['jack','mason','dana','leo']);
+  assert.equal(groups.length,1);assert.equal(groups[0].groupId,'korean-week');assert.ok(groups[0].messages.length>=3);
+  data.conversations=[data.conversations[0]];ensureResidenceState(data);ensureResidenceState(data);
+  assert.equal(data.conversations.length,5);assert.equal(data.conversations.filter(chat=>chat.groupId).length,1);
+});
 test('failed mutations roll back without poisoning subsequent writes',async()=>{
   const storage=new MemoryStorage(),repo=new DemoRepository('a',storage);await repo.load();const count=repo.data.posts.length;await assert.rejects(repo.run('publish',{...draft(),title:' '}),/title/);await repo.run('bookmark','bibimbap');await repo.load();assert.equal(repo.data.posts.length,count);assert.deepEqual(repo.data.saved,['bibimbap']);
 });

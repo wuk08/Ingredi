@@ -1,5 +1,16 @@
 import { localDate } from "./domain.mjs";
 import { activeResidence, setupComplete, needsStudentCheck, normalizeResidence } from './residence.mjs';
+const sampleConversationTemplates = (now = /* @__PURE__ */ new Date()) => {
+  const at = minutesAgo => new Date(now.getTime() - minutesAgo * 60 * 1000).toISOString();
+  return [
+    { key: 'seed:carrots', id: 'share-carrots', postId: 'carrots', owner: 'you', food: 'Carrot', person: 'jack', unread: 1, messages: [{ id: 'seed-carrots-1', sender: 'jack', text: 'Hi! Are the carrots still available? I can pick them up around 6.', at: at(18) }] },
+    { key: 'seed:eggs', id: 'share-eggs', postId: 'eggs', owner: 'mason', food: 'Eggs', person: 'mason', unread: 1, messages: [{ id: 'seed-eggs-1', sender: 'you', text: 'I can spare two eggs. Would the lobby work?', at: at(145) }, { id: 'seed-eggs-2', sender: 'mason', text: 'That would be amazing—yes, I can meet you there after class!', at: at(139) }] },
+    { key: 'seed:cooker', id: 'share-cooker', postId: 'cooker', owner: 'dana', food: 'Rice cooker', person: 'dana', unread: 0, messages: [{ id: 'seed-cooker-1', sender: 'you', text: 'Is the rice cooker still available to borrow this weekend?', at: at(330) }, { id: 'seed-cooker-2', sender: 'dana', text: 'It is! I can leave it with the front desk Saturday morning.', at: at(318) }] },
+    { key: 'seed:basil', id: 'share-basil', postId: 'basil', owner: 'leo', food: 'Basil', person: 'leo', unread: 0, messages: [{ id: 'seed-basil-1', sender: 'you', text: 'I have a small bunch of basil from my windowsill garden.', at: at(1510) }, { id: 'seed-basil-2', sender: 'leo', text: 'Perfect, thank you! A few sprigs are all I need.', at: at(1498) }] },
+    { key: 'seed:korean-group', id: 'korean-group-chat', groupId: 'korean-week', groupTitle: 'Korean Food Week', person: null, unread: 3, messages: [{ id: 'seed-group-1', sender: 'jack', text: 'Welcome! I’ll bring bibimbap in four containers.', at: at(62) }, { id: 'seed-group-2', sender: 'mason', text: 'Spicy pork is marinating now 🌶️', at: at(54) }, { id: 'seed-group-3', sender: 'ari', text: 'I’ve got kimchi fried rice covered. See everyone Wednesday!', at: at(47) }] }
+  ];
+};
+const sampleConversations = now => sampleConversationTemplates(now).map(({ key, id, postId = null, groupId = null, person, unread, messages }) => ({ id, sampleKey: key, postId, groupId, person, unread, messages }));
 function seedCommunity(now = /* @__PURE__ */ new Date()) {
   const people = { you: { name: "Jason Park", city: "Ann Arbor, MI" }, jack: { name: "Jack Lee", distance: 0.2 }, mason: { name: "Mason Mei", distance: 0.4 }, ari: { name: "Ari Kim", distance: 0.6 }, dana: { name: "Dana P.", distance: 0.8 }, leo: { name: "Leo S.", distance: 0.9 } };
   const post = (id, owner, title, type, category, offer, distance, food, quantity = 1) => ({ id, owner, title, type, category, offer, distance, food, quantity, unit: "item", description: "A little extra to share with the neighborhood. Happy to hand off at my building lobby.", pickup: "Today, 5–8 PM · building lobby", expires_on: localDate(3), status: "active", photos: [], created_at: now.toISOString() });
@@ -15,7 +26,7 @@ function seedCommunity(now = /* @__PURE__ */ new Date()) {
       { id: "korean-week", title: "Korean Food Week", description: "Cook one dish at home, swap portions, take home 4 different meals.", date: localDate(2), time: "5 PM", location: "Ann Arbor Library lobby", capacity: 4, members: [{ person: "jack", dish: "Bibimbap", host: true }, { person: "mason", dish: "Spicy pork" }, { person: "ari", dish: "Kimchi fried rice" }], dishes: ["Bibimbap", "Spicy pork", "Kimchi fried rice", "Kimchi jjigae"] },
       { id: "veggie-batch", title: "Veggie Batch Club", description: "A Sunday batch of bright vegetable dishes, shared with neighbors.", date: localDate(3), time: "4 PM", location: "Community garden entrance", capacity: 4, members: [{ person: "dana", dish: "Golden vegetable curry", host: true }, { person: "leo", dish: "Roast vegetables" }], dishes: ["Golden vegetable curry", "Roast vegetables", "Vegetable soup", "Chickpea salad"] }
     ],
-    conversations: [{ id: "share-carrots", postId: "carrots", person: "jack", groupId: null, unread: 1, messages: [{ id: "seed-message", sender: "jack", text: "Hi! Are the carrots still available? I can pick them up around 6.", at: now.toISOString() }] }],
+    conversations: sampleConversations(now),
     completions: [],
     ratings: {},
     impact: { points: 1240, shares: 18, meals: 27, savings: 86 }
@@ -45,12 +56,25 @@ function uniqueCommunityFeed(items, kind) {
   return cards;
 }
 const communityKeys = ['people', 'posts', 'groups', 'conversations', 'draft', 'completions', 'ratings', 'impact'];
+function ensureSampleConversations(data) {
+  data.conversations ||= [];
+  const home = activeResidence(data);
+  const prefer = (items, involved = () => false) => [...items].sort((a, b) => Number(involved(b)) * 8 + Number(b.residenceId === home?.id) * 4 + Number(b.status === 'active') - (Number(involved(a)) * 8 + Number(a.residenceId === home?.id) * 4 + Number(a.status === 'active')))[0];
+  for (const template of sampleConversationTemplates()) {
+    const parent = template.groupId
+      ? prefer(data.groups?.filter(group => group.title === template.groupTitle) || [], group => group.members?.some(member => member.person === 'you'))
+      : prefer(data.posts?.filter(post => post.owner === template.owner && post.food === template.food) || []);
+    if (!parent || data.conversations.some(chat => chat.sampleKey === template.key || (template.groupId ? chat.groupId === parent.id : chat.postId === parent.id))) continue;
+    data.conversations.push({ id: globalThis.crypto.randomUUID(), sampleKey: template.key, postId: template.groupId ? null : parent.id, groupId: template.groupId ? parent.id : null, person: template.person, unread: template.unread, messages: template.messages.map(message => ({ ...message })) });
+  }
+}
 function ensureResidenceState(data) {
   data.residences ||= [];
   data.activeResidenceId ||= null;
   data.communityArchives ||= {};
   data.student ||= { isStudent: null, school: '', verification: 'required' };
   data.onboardingSkipped ??= false;
+  ensureSampleConversations(data);
   return data;
 }
 function canAccess(data, record) {
