@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import { App } from "./App";
 import { AppStateProvider } from "./data/AppState";
+import "maplibre-gl/dist/maplibre-gl.css";
 import "./theme/global.css";
 
 document.documentElement.dataset.platform = Capacitor.getPlatform();

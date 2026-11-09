@@ -34,7 +34,7 @@ function mapNotice(element) {
   element.append(notice);
   return notice;
 }
-export function mountMap(options, { loadLibrary = loadMapLibrary } = {}) {
+export function mountMap(options, { loadLibrary = loadMapLibrary, workerUrl } = {}) {
   if (!validLocation(options.location)) {
     options.element.textContent = 'Add a map location to your residence to display the map.';
     return () => {};
@@ -43,7 +43,7 @@ export function mountMap(options, { loadLibrary = loadMapLibrary } = {}) {
   const notice = mapNotice(options.element);
   Promise.resolve().then(loadLibrary).then(GL => {
     if (disposed) return;
-    GL.setWorkerUrl(mapAsset('vendor/maplibre/maplibre-gl-worker.mjs?v=6.16.0'));
+    GL.setWorkerUrl(workerUrl || mapAsset('vendor/maplibre/maplibre-gl-worker.mjs?v=6.16.0'));
     GL.setWorkerCount(1);
     dispose = mountVectorMap({ ...options, notice }, GL);
   }).catch(() => {
@@ -53,14 +53,14 @@ export function mountMap(options, { loadLibrary = loadMapLibrary } = {}) {
   });
   return () => { if (disposed) return; disposed = true; dispose(); notice.remove(); };
 }
-export function mountVectorMap({ element, posts, selected, view, location, residenceId, residenceName, onSelect, onView, notice = mapNotice(element) }, GL) {
+export function mountVectorMap({ element, posts, selected, view, location, residenceId, residenceName, onSelect, onView, mapStyle, notice = mapNotice(element) }, GL) {
   const touch = Boolean(globalThis.matchMedia?.('(pointer: coarse)').matches);
   const initial = view || defaultView(location);
   // Keep wheel events out of map gesture handlers without cancelling page scrolling.
   const pageWheel = event => event.stopPropagation();
   const map = new GL.Map({
     container: element,
-    style: mapAsset('maps/residence-style.json'),
+    style: mapStyle || mapAsset('maps/residence-style.json'),
     // Existing views use a 256px tile zoom; the vector renderer uses a 512px world.
     center: [initial.center[1], initial.center[0]], zoom: initial.zoom - 1,
     minZoom: 1, maxZoom: 18, maxPitch: 0,

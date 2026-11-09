@@ -52,4 +52,6 @@ test('native demo uses bundled assets and includes the camera plugin',async()=>{
   assert.match(state,/public\/lib\/api\.mjs/);
   assert.match(state,/public\/lib\/community\.mjs/);
   assert.match(state,/confirm_receipt/);
+  const map=await readFile(new URL('../web/src/components/ResidenceMap.tsx',import.meta.url),'utf8');
+  assert.match(map,/mountMap/);assert.match(map,/maplibre-gl-worker\.mjs\?url/);assert.match(map,/residence-style\.json/);
 });
