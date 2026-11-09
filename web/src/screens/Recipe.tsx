@@ -1,7 +1,11 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { catalog } from "../../../public/lib/recipes.mjs";
+import { normalizeIngredient } from "../../../public/lib/domain.mjs";
+import { photos } from "../assets/photos";
 import { BackIcon, BookmarkIcon } from "../components/Icons";
-import { recipes } from "../data/content";
+import { recipes as detailedRecipes } from "../data/content";
+import { useAppState } from "../data/AppState";
 
 const dot = (have: boolean) => ({
   width: 10, height: 10, borderRadius: 5, flexShrink: 0,
@@ -12,10 +16,18 @@ const dot = (have: boolean) => ({
 export function Recipe() {
   const nav = useNavigate();
   const { id } = useParams();
-  const recipe = (id && recipes[id]) || recipes.bibimbap;
+  const { pantry, recipes: backendRecipes, community, runCommunity } = useAppState();
+  const recipe = useMemo(() => {
+    const detailed = id && detailedRecipes[id];
+    const available = new Set(pantry.map((item) => normalizeIngredient(item.name)));
+    if (detailed) return { ...detailed, key: id, ingredients: detailed.ingredients.map((item) => ({ ...item, have: available.has(normalizeIngredient(item.name)) })) };
+    const found = catalog(backendRecipes).find((item: any) => item.id === id) || catalog(backendRecipes)[0];
+    if (!found) return { ...detailedRecipes.bibimbap, key: "bibimbap" };
+    return { key: found.key, name: found.name, photo: photos[found.name.toLowerCase().includes("kimchi") ? "kimchi-fried-rice" : "shakshuka"], meta: [`${found.cook_minutes} min`, `${found.servings || 2} servings`, found.difficulty || "Easy", found.cuisine || "Everyday"], ingredients: found.ingredients.map((value: any) => { const name = typeof value === "string" ? value : value.name; return { name, importance: "Essential", have: available.has(normalizeIngredient(name)), sub: "ask your building nearby" }; }), steps: found.instructions || [] };
+  }, [backendRecipes, id, pantry]);
   const [tab, setTab] = useState<"ing" | "steps">("ing");
-  const [saved, setSaved] = useState(false);
-  const have = recipe.ingredients.filter((i) => i.have).length;
+  const saved = community.saved?.includes(recipe.key) || false;
+  const have = recipe.ingredients.filter((i: any) => i.have).length;
   const total = recipe.ingredients.length;
 
   return (
@@ -25,7 +37,7 @@ export function Recipe() {
           <button type="button" className="icon-btn icon-btn--over-media" aria-label="Back" style={{ position: "absolute", left: 16, top: "var(--overlay-top)" }}
             onClick={() => (window.history.state?.idx ? nav(-1) : nav("/cook"))}><BackIcon /></button>
           <button type="button" className="icon-btn icon-btn--over-media" aria-label={saved ? "Saved" : "Save recipe"} aria-pressed={saved}
-            style={{ position: "absolute", right: 16, top: "var(--overlay-top)" }} onClick={() => setSaved(!saved)}>
+            style={{ position: "absolute", right: 16, top: "var(--overlay-top)" }} onClick={() => void runCommunity("bookmark", recipe.key)}>
             <BookmarkIcon filled={saved} color={saved ? "var(--primary)" : undefined} />
           </button>
         </div>
@@ -53,7 +65,7 @@ export function Recipe() {
 
         {tab === "ing" ? (
           <section style={{ padding: "0 16px", display: "flex", flexDirection: "column" }}>
-            {recipe.ingredients.map((i) => (
+            {recipe.ingredients.map((i: any) => (
               <div key={i.name} style={{ display: "flex", flexDirection: "column", gap: 6, padding: "12px 0" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <span style={dot(i.have)} />
@@ -64,7 +76,7 @@ export function Recipe() {
                 {!i.have && (
                   <div style={{ marginLeft: 20, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
                     <span className="small" style={{ background: "var(--surface-muted)", borderRadius: 8, padding: "6px 10px" }}>Swap: {i.sub}</span>
-                    <Link to="/nearby" style={{ fontSize: 13, textDecoration: "underline" }}>Find nearby</Link>
+                    <Link to={`/nearby?q=${encodeURIComponent(i.name)}`} style={{ fontSize: 13, textDecoration: "underline" }}>Find nearby</Link>
                   </div>
                 )}
               </div>
@@ -72,14 +84,14 @@ export function Recipe() {
           </section>
         ) : (
           <ol style={{ margin: 0, padding: "0 16px 0 40px", display: "flex", flexDirection: "column", gap: 14, fontSize: 15, lineHeight: 1.5 }}>
-            {recipe.steps.map((s) => <li key={s}>{s}</li>)}
+            {recipe.steps.map((s: string) => <li key={s}>{s}</li>)}
           </ol>
         )}
       </main>
 
       <div className="action-bar">
-        <Link to="/nearby" className="btn btn--secondary" style={{ borderRadius: 14, fontWeight: 500, fontSize: 15 }}>Find nearby</Link>
-        <Link to="/meal-swap" className="btn btn--primary" style={{ borderRadius: 14, fontSize: 15 }}>Plan meal prep</Link>
+        <Link to={`/nearby?q=${encodeURIComponent(recipe.ingredients.find((item: any) => !item.have)?.name || recipe.name)}`} className="btn btn--secondary" style={{ borderRadius: 14, fontWeight: 500, fontSize: 15 }}>Find nearby</Link>
+        <Link to={`/post/new?type=meal_prep&dish=${encodeURIComponent(recipe.name)}`} className="btn btn--primary" style={{ borderRadius: 14, fontSize: 15 }}>Plan meal prep</Link>
       </div>
     </>
   );

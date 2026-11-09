@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { fridgeAddedSvg } from "../assets/celebrate";
 import { photos } from "../assets/photos";
 import { ChevronIcon } from "../components/Icons";
@@ -12,6 +12,10 @@ const cookNow = [
 ];
 
 export function ScanDone() {
+  const location = useLocation();
+  const result = (location.state as { count?: number; names?: string[] } | null) || {};
+  const count = result.count || result.names?.length || 0;
+  const names = result.names || [];
   const [run, setRun] = useState(0);
   useEffect(() => { const t = setTimeout(() => setRun(1), 150); return () => clearTimeout(t); }, []);
   return (
@@ -21,8 +25,8 @@ export function ScanDone() {
           <button type="button" aria-label="Play again" onClick={() => setRun(run + 1)} style={{ width: 140, height: 140, border: 0, padding: 0, background: "transparent", cursor: "pointer", marginTop: -24 }}>
             {run > 0 && <span key={run} style={{ display: "block" }} dangerouslySetInnerHTML={{ __html: fridgeAddedSvg }} />}
           </button>
-          <h1 className="h1">6 items added to your fridge</h1>
-          <p className="body" style={{ margin: 0, fontSize: 15 }}>Milk, Eggs, Chicken thighs, Baby spinach, Tomatoes, Cheddar cheese</p>
+          <h1 className="h1">{count} item{count === 1 ? "" : "s"} added to your fridge</h1>
+          <p className="body" style={{ margin: 0, fontSize: 15 }}>{names.join(", ") || "Your reviewed ingredients are ready."}</p>
         </section>
 
         <section style={{ display: "flex", flexDirection: "column", gap: 10 }}>

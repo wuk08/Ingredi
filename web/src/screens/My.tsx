@@ -1,84 +1,32 @@
-import { Link } from "react-router-dom";
-import { Avatar } from "../components/Avatar";
-import { ChevronIcon, PlusIcon } from "../components/Icons";
-import { savedRecipes, recipeLink } from "../data/content";
-import { useStore } from "../data/store";
-
-const stat = (n: string, label: string) => (
-  <div style={{ background: "var(--fill-on-surface)", borderRadius: 14, padding: "12px 10px", display: "flex", flexDirection: "column", gap: 2 }}>
-    <span style={{ fontSize: 20, fontWeight: 600 }}>{n}</span><span className="caption" style={{ fontWeight: 400 }}>{label}</span>
-  </div>
-);
-
-const row = (to: string, label: string, value?: string) => (
-  <Link to={to} style={{ display: "flex", alignItems: "center", gap: 12, height: 56, boxShadow: "0 1px 0 var(--divider)", fontSize: 16 }}>
-    <span style={{ flex: 1 }}>{label}</span>{value && <span className="small">{value}</span>}<ChevronIcon />
-  </Link>
-);
+import { useState, type FormEvent } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { photos } from "../assets/photos";
+import { ChevronIcon } from "../components/Icons";
+import { useAppState } from "../data/AppState";
 
 export function My() {
-  const { tokens, points } = useStore();
-  const next = 1500;
-  return (
-    <main className="screen-scroll" style={{ padding: "var(--screen-top) 16px 24px", gap: 22 }}>
-      <section style={{ display: "flex", alignItems: "center", gap: 14 }}>
-        <Avatar name="Jason Park" size={72} />
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4 }}>
-          <h1 className="h1" style={{ fontSize: 22 }}>Jason Park</h1>
-          <span style={{ fontSize: 14, color: "var(--text-body)" }}>Ann Arbor, MI<br />Joined Sep 2026</span>
-        </div>
-        <button type="button" className="btn btn--secondary btn--sm">Edit</button>
-      </section>
-
-      <section className="box" style={{ borderRadius: 20, display: "flex", flexDirection: "column", gap: 14 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-          <h2 className="h3">My Impact</h2><span style={{ fontSize: 13 }}>Level 3 · Good Neighbor</span>
-        </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13 }}>
-            <span>{points.toLocaleString()} points</span><span style={{ color: "var(--text-body)" }}>{Math.max(0, next - points)} to Level 4</span>
-          </div>
-          <div style={{ height: 8, borderRadius: 4, background: "#fff" }}>
-            <div style={{ width: `${Math.min(100, (points / next) * 100)}%`, height: 8, borderRadius: 4, background: "var(--primary)", transition: "width .6s" }} />
-          </div>
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0,1fr))", gap: 8 }}>
-          {stat("18", "Items shared")}{stat("27", "Meals rescued")}{stat("$86", "Est. savings")}
-        </div>
-      </section>
-
-      <section style={{ borderRadius: 20, padding: "14px 14px 14px 16px", display: "flex", alignItems: "center", gap: 12, background: "var(--surface-muted)" }}>
-        <span aria-hidden="true" style={{ width: 44, height: 44, borderRadius: 22, background: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.8"><circle cx="12" cy="12" r="8.5" /><circle cx="12" cy="12" r="5" /></svg>
-        </span>
-        <span style={{ flex: 1, display: "flex", flexDirection: "column", gap: 2 }}>
-          <span className="small">My tokens</span><span style={{ fontSize: 22, fontWeight: 600, lineHeight: 1.1 }}>{tokens}</span>
-        </span>
-        <Link to="/tokens" className="btn btn--primary" style={{ minHeight: 40, padding: "0 16px", fontSize: 14, fontWeight: 500, gap: 6 }}><PlusIcon size={16} color="#fff" />Get tokens</Link>
-      </section>
-
-      <section style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-          <h2 className="h3">Saved Recipes</h2>
-          <Link to="/cook" style={{ fontSize: 13, fontWeight: 600, color: "var(--primary-ink)" }}>view all</Link>
-        </div>
-        <div style={{ display: "flex", gap: 10, overflowX: "auto", margin: "0 -16px", padding: "0 16px" }}>
-          {savedRecipes.map((r) => (
-            <Link key={r.name} to={recipeLink(r.name)} style={{ flex: "0 0 132px", display: "flex", flexDirection: "column", gap: 6 }}>
-              <span role="img" aria-label={r.name} style={{ height: 100, borderRadius: 16, background: `var(--surface-muted) url("${r.photo}") center / cover no-repeat` }} />
-              <span style={{ fontSize: 14 }}>{r.name}</span>
-            </Link>
-          ))}
-          <span aria-hidden="true" style={{ flex: "0 0 6px" }} />
-        </div>
-      </section>
-
-      <div>
-        {row("/post", "My Posts / Shares", "2 active")}
-        {row("/cook", "Preferences", "Korean, Spicy")}
-        {row("/my", "Settings")}
-        <Link to="/" style={{ display: "flex", alignItems: "center", height: 56, color: "var(--text-body)", fontSize: 15 }}>Log out</Link>
-      </div>
-    </main>
-  );
+  const nav = useNavigate();
+  const { profile, community, home, signed, setDialog, updateProfile, runCommunity, resetCommunity, logout, busy } = useAppState();
+  const [editing, setEditing] = useState(false);
+  const [preferencesOpen, setPreferencesOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const impact = community.impact || { points: 0, shares: 0, meals: 0, savings: 0 };
+  const saveProfile = async (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); const data = new FormData(event.currentTarget); await updateProfile({ display_name: String(data.get("display_name")), city: String(data.get("city")) }); setEditing(false); };
+  const togglePreference = async (value: string) => { const current = community.preferences || []; await runCommunity("preferences", current.includes(value) ? current.filter((item: string) => item !== value) : [...current, value]); };
+  return <main className="screen-scroll profile-screen">
+    <section className="profile-heading"><span className="profile-avatar">{profile.display_name.split(/\s+/).map((part) => part[0]).join("").slice(0, 2)}</span><span><h1 className="h1">{profile.display_name}</h1><p>{home?.name || profile.city || "Your neighborhood"}<br /><small>{signed ? "Private Supabase account" : "Device demo"}</small></p></span><button className="btn btn--secondary btn--sm" onClick={() => setEditing(!editing)}>Edit</button></section>
+    {editing && <form className="card form-stack profile-form" onSubmit={saveProfile}><label className="form-field">Display name<input name="display_name" defaultValue={profile.display_name} maxLength={80} required /></label><label className="form-field">City<input name="city" defaultValue={profile.city} maxLength={100} /></label><button className="btn btn--primary" disabled={busy}>Save profile</button></form>}
+    <section className="box impact-card"><div><h2 className="h3">My Impact</h2><span>Level 3 · Good Neighbor</span></div><b className="impact-points">{impact.points.toLocaleString()} points</b><div className="impact-stats"><span><b>{impact.shares}</b><small>Items shared</small></span><span><b>{impact.meals}</b><small>Meals rescued</small></span><span><b>${impact.savings}</b><small>Est. savings</small></span></div></section>
+    <section className="form-stack"><h2 className="h3">Saved recipes</h2>{community.saved?.length ? <div className="saved-row">{community.saved.map((key: string) => <Link to={`/recipe/${key.includes("kimchi") ? "kimchi-fried-rice" : key}`} key={key}><span style={{ backgroundImage: `url("${photos[key.includes("kimchi") ? "kimchi-fried-rice" : "bibimbap"]}")` }} /><small>{key}</small></Link>)}</div> : <Link to="/cook" className="card feature-link"><span><b>Keep a little inspiration</b><small>Save a recipe to find it here.</small></span><ChevronIcon /></Link>}</section>
+    <section className="settings-list">
+      <button type="button" onClick={() => setDialog("setup")}><span><b>Residence &amp; student status</b><small>{home?.name || "Set up your community"}</small></span><ChevronIcon /></button>
+      {community.student?.isStudent && <button type="button" onClick={() => setDialog("verify")}><span><b>Sample student ID check</b><small>{community.student.verification === "demo_complete" ? "Demo check completed" : "Required before exchanging"}</small></span><ChevronIcon /></button>}
+      <Link to="/my/posts"><span><b>My posts / shares</b><small>{community.posts.filter((post: any) => post.owner === "you" && post.status === "active").length} active</small></span><ChevronIcon /></Link>
+      <button type="button" onClick={() => setPreferencesOpen(!preferencesOpen)}><span><b>Preferences</b><small>{community.preferences?.join(", ") || "Make it yours"}</small></span><ChevronIcon /></button>
+      {preferencesOpen && <div className="settings-panel"><div className="chip-row">{["Korean", "Vegetarian", "Under 20 min", "High protein", "Spicy"].map((value) => <button type="button" className="chip" aria-pressed={community.preferences?.includes(value)} key={value} onClick={() => void togglePreference(value)}>{value}</button>)}</div></div>}
+      <button type="button" onClick={() => setSettingsOpen(!settingsOpen)}><span><b>Settings</b><small>Kitchen connection and demo data</small></span><ChevronIcon /></button>
+      {settingsOpen && <div className="settings-panel form-stack"><p className="small">{signed ? "Your receipt scans and fridge are saved privately to Supabase." : "Your sample fridge is saved on this device."}</p><button className="btn btn--secondary" disabled={busy} onClick={() => void resetCommunity()}>Reset community demo</button></div>}
+      <button type="button" disabled={busy} onClick={() => void (signed ? logout().then(() => nav("/")) : Promise.resolve(nav("/")))}><span><b>{signed ? "Sign out" : "Back to welcome"}</b><small>{signed ? "Disconnect this Supabase session" : "Leave the device demo"}</small></span><ChevronIcon /></button>
+    </section>
+  </main>;
 }

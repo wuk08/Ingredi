@@ -26,7 +26,7 @@ src/
     global.css       base styles + component classes (.btn, .chip, .card, .box, .tag, .tabbar…)
   components/        Button, Chip, Avatar, BellButton, TabBar, TopBar, Icons, Logotype, Illustration, Photo
   screens/           every screen from the prototype (see Routes)
-  data/              personas, screen content, store.ts (tokens + points shared between screens)
+  data/              AppState.tsx bridge plus prototype media/content helpers
   assets/
     avatars/         10 profile PNGs (512px). 01 Jack, 02 Mason, 03 Leo, 05 Dana, 06 Priya, 07 Jason, 08 Ari; 04/09/10 spare
     photos/          12 food photos (JPEG) + index.ts → import { photos } from "../assets/photos"
@@ -54,15 +54,15 @@ All prototype boards are ported. Open any route directly while developing.
 | `/` | Login |
 | `/home` · `/cook` · `/nearby` · `/messages` · `/my` | Tabs (Nearby: `?view=list` for the list view) |
 | `/recipe` | Recipe Detail |
-| `/meal-swap` | Meal Swap |
+| `/meal-swap/:id` | Persistent Meal Swap |
 | `/fridge/add` | Fill up fridge |
 | `/scan` → `/scan/review` → `/scan/done` | Scan 1–3 |
-| `/post` · `/post/new` | Post Detail · Upload Post |
-| `/chat` | Chat (Mark shared → `/shared`) |
-| `/shared` | Shared! reward (apple → gift, points graph, claim token) |
+| `/post/:id` · `/post/new` | Persistent Post Detail · Upload Post |
+| `/chat/:id` · `/chat/group/:id` | Persistent direct and group chats |
+| `/shared/:id` | Completed share, impact, and saved rating |
 | `/tokens` | Get tokens (Apple Pay + card) |
 
-Data is mock and lives in `src/data`. Tokens and points use a tiny in-memory store (`src/data/store.ts`), so buying or claiming a token updates the My screen. Swap it for your real data layer later.
+`src/data/AppState.tsx` reuses the original `public/lib` implementations. Supabase Auth and private pantry/profile/receipt/recipe operations remain backend-connected. Residence-scoped posts, conversations, groups, verification state, and illustrative impact remain the same explicitly simulated IndexedDB community from the backup frontend. Prototype-only token purchases remain in-memory and are not represented as real billing.
 
 Shared classes added to `global.css`: `.topbar`, `.action-bar`, `.seg`, `.rows`, `.field`, `.switch`, `.stepper`, `.mini-map`/`.road`, `.map-pin`, `.photo-scrim`.
 

@@ -1,13 +1,18 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { localDate } from "../../../public/lib/domain.mjs";
 import { CameraIcon, CheckIcon, CloseIcon, SearchIcon } from "../components/Icons";
 import { TopBar } from "../components/TopBar";
+import { useAppState } from "../data/AppState";
 
 const exps = ["3 days", "1 week", "2 weeks", "1 month"];
+const expiryOffsets = [3, 7, 14, 30];
 const quickList = ["Milk", "Eggs", "Onion", "Garlic", "Chicken", "Tomato", "Carrot", "Cheese", "Bread", "Green onion"];
 type Item = { name: string; e: number; on: boolean };
 
 export function AddIngredient() {
+  const nav = useNavigate();
+  const { addPantry, busy } = useAppState();
   const [draft, setDraft] = useState("");
   const [items, setItems] = useState<Item[]>([{ name: "Milk", e: 1, on: true }, { name: "Onion", e: 2, on: true }]);
   const has = (n: string) => items.some((x) => x.name.toLowerCase() === n.toLowerCase());
@@ -15,6 +20,11 @@ export function AddIngredient() {
   const remove = (n: string) => setItems(items.filter((x) => x.name !== n));
   const upd = (n: string, f: (x: Item) => Item) => setItems(items.map((x) => (x.name === n ? f(x) : x)));
   const count = items.filter((x) => x.on).length;
+  const save = async () => {
+    const selected = items.filter((item) => item.on).map((item) => ({ name: item.name, quantity: 1, unit: "item", expires_on: localDate(expiryOffsets[item.e % expiryOffsets.length]) }));
+    if (selected.length) await addPantry(selected);
+    nav("/cook");
+  };
 
   return (
     <>
@@ -68,7 +78,7 @@ export function AddIngredient() {
         </section>
       </main>
       <div className="action-bar">
-        <Link to="/cook" className="btn btn--primary" style={{ borderRadius: 14 }}>{count ? `Add ${count} item${count > 1 ? "s" : ""} to fridge` : "Done"}</Link>
+        <button type="button" className="btn btn--primary" disabled={busy} style={{ borderRadius: 14 }} onClick={() => void save()}>{busy ? "Adding…" : count ? `Add ${count} item${count > 1 ? "s" : ""} to fridge` : "Done"}</button>
       </div>
     </>
   );

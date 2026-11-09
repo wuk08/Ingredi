@@ -1,8 +1,9 @@
 import { useEffect, useState, type CSSProperties } from "react";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { appleToGiftSvg } from "../assets/celebrate";
 import { CloseIcon } from "../components/Icons";
 import { setStore, useStore } from "../data/store";
+import { useAppState } from "../data/AppState";
 import "./celebrate.css";
 
 const shades = ["#E46F5A", "#F2C66D", "#BF4F3B", "#FBE6E0"];
@@ -36,22 +37,28 @@ const CONFETTI: CSSProperties[] = Array.from({ length: 16 }, (_, i) => {
 });
 
 export function Shared() {
+  const { id } = useParams();
+  const { community, runCommunity } = useAppState();
+  const post = community.posts?.find((item: any) => item.id === id);
+  const personKey = post?.owner === "you" ? community.conversations?.find((chat: any) => chat.postId === id)?.person : post?.owner;
+  const personName = community.people?.[personKey]?.name || "your neighbor";
+  const startPoints = Math.max(0, (community.impact?.points || START) - 50);
   const { tokens } = useStore();
   const [run, setRun] = useState(0);
-  const [pts, setPts] = useState(START);
+  const [pts, setPts] = useState(startPoints);
   const [claimed, setClaimed] = useState(false);
-  const [rating, setRating] = useState(0);
+  const [rating, setRating] = useState(Number(community.ratings?.[id || ""] || 0));
   const [tags, setTags] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     const t0 = setTimeout(() => setRun(1), 250);
     let iv: ReturnType<typeof setInterval>;
     const t1 = setTimeout(() => {
-      iv = setInterval(() => setPts((p) => { const n = Math.min(START + GAIN, p + 2); if (n >= START + GAIN) clearInterval(iv); return n; }), 28);
+      iv = setInterval(() => setPts((p) => { const n = Math.min(startPoints + GAIN, p + 2); if (n >= startPoints + GAIN) clearInterval(iv); return n; }), 28);
     }, 1900);
     setStore({ points: START + GAIN });
     return () => { clearTimeout(t0); clearTimeout(t1); clearInterval(iv); };
-  }, []);
+  }, []); // animation runs once for this completion
 
   const pct = Math.max(0, Math.min(100, (pts - 1000) / 5));
   const stat = (n: string, d: string, l: string) => (
@@ -86,8 +93,8 @@ export function Shared() {
             )}
           </button>
           <span className="caption" style={{ fontWeight: 400 }}>Tap the gift to celebrate again</span>
-          <h1 className="h1" style={{ marginTop: 4 }}>Shared with Jack!</h1>
-          <p className="body" style={{ margin: 0, fontSize: 15, maxWidth: 290, lineHeight: 1.4 }}>3 avocados found a new home instead of the bin. Nice one, Jason.</p>
+          <h1 className="h1" style={{ marginTop: 4 }}>Shared with {personName}!</h1>
+          <p className="body" style={{ margin: 0, fontSize: 15, maxWidth: 290, lineHeight: 1.4 }}>{post?.title || "An ingredient"} found a new home instead of the bin.</p>
         </section>
 
         <section className="card" style={{ borderRadius: 20, display: "flex", flexDirection: "column", gap: 12 }}>
@@ -96,7 +103,7 @@ export function Shared() {
             <span style={{ fontSize: 36, fontWeight: 600, letterSpacing: -0.5 }}>{pts.toLocaleString("en-US")}</span>
             <span style={{ fontSize: 15, fontWeight: 600, background: "var(--primary)", color: "#fff", borderRadius: 999, padding: "2px 10px", animation: "sc-pop .5s 1.9s ease-out both" }}>+{GAIN}</span>
           </div>
-          <span className="small" style={{ marginTop: -6 }}>{START.toLocaleString("en-US")} → {pts.toLocaleString("en-US")}</span>
+          <span className="small" style={{ marginTop: -6 }}>{startPoints.toLocaleString("en-US")} → {pts.toLocaleString("en-US")}</span>
           <div style={{ height: 10, borderRadius: 5, background: "var(--surface-muted)", overflow: "hidden", display: "flex", gap: 2 }}>
             <div style={{ height: 10, background: "var(--primary)", width: "48%", flexShrink: 0 }} />
             <div style={{ height: 10, background: "var(--accent)", borderRadius: "0 5px 5px 0", width: `${Math.max(0, pct - 48)}%`, flexShrink: 0 }} />
@@ -117,10 +124,10 @@ export function Shared() {
         )}
 
         <section style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          <h2 className="h3">How was it with Jack?</h2>
+          <h2 className="h3">How was it with {personName}?</h2>
           <div role="radiogroup" aria-label="Rate your exchange" style={{ display: "flex", gap: 6 }}>
             {[1, 2, 3, 4, 5].map((n) => (
-              <button key={n} type="button" role="radio" aria-checked={rating === n} aria-label={`${n} star${n > 1 ? "s" : ""}`} onClick={() => setRating(n)}
+              <button key={n} type="button" role="radio" aria-checked={rating === n} aria-label={`${n} star${n > 1 ? "s" : ""}`} onClick={() => { setRating(n); if (id) void runCommunity("rate", { id, rating: n }); }}
                 style={{ width: 48, height: 48, borderRadius: 24, border: 0, background: "transparent", display: "flex", alignItems: "center", justifyContent: "center", padding: 0, cursor: "pointer" }}>
                 <svg width="32" height="32" viewBox="0 0 24 24" fill={n <= rating ? "#F2C66D" : "none"} stroke="#E0AE4A" strokeWidth="1.6" strokeLinejoin="round" aria-hidden="true"><path d="M12 3l2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.6 6.6 19.5l1.2-6L3.3 9.3l6.1-.7z" /></svg>
               </button>
@@ -131,7 +138,7 @@ export function Shared() {
               <button key={l} type="button" className="chip" aria-pressed={!!tags[l]} onClick={() => setTags({ ...tags, [l]: !tags[l] })}>{l}</button>
             ))}
           </div>
-          {rating > 0 && <p className="small" style={{ margin: 0 }}>Thanks! Jack will see your note — kind words help neighbors keep sharing.</p>}
+          {rating > 0 && <p className="small" style={{ margin: 0 }}>Thanks! Your rating is saved with this device-local community exchange.</p>}
         </section>
       </main>
       <div className="action-bar">

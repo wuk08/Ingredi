@@ -1,112 +1,49 @@
 import { useState } from "react";
-import { Camera } from "@capacitor/camera";
 import { Capacitor } from "@capacitor/core";
 import { useNavigate } from "react-router-dom";
+import { captureNativeReceipt } from "../../../public/lib/capture.mjs";
+import { MAX_IMAGE_BYTES, validateImage } from "../../../public/lib/domain.mjs";
 import { CloseIcon } from "../components/Icons";
+import { useAppState } from "../data/AppState";
 
-const widths = [62, 48, 70, 54, 44, 66, 58, 50, 40];
-const corner = (pos: Record<string, number>, sides: string, radius: string) => (
-  <span aria-hidden="true" style={{ position: "absolute", ...pos, width: 36, height: 36, [radius]: 14,
-    ...Object.fromEntries(sides.split(" ").map((s) => [`border${s}`, "4px solid #fff"])) }} />
-);
-const glass = "rgba(255,255,255,.14)";
-
-/** Camera view. Always dark, like the native camera. Swap the mock frame for getUserMedia later. */
 export function ScanCamera() {
   const nav = useNavigate();
-  const [mode, setMode] = useState<"Receipt" | "Groceries">("Receipt");
-  const [flash, setFlash] = useState(false);
-  const [busy, setBusy] = useState<"camera" | "photos" | null>(null);
+  const { signed, busy, startReceiptScan } = useAppState();
+  const [consent, setConsent] = useState(false);
   const [error, setError] = useState("");
-  const r = mode === "Receipt";
+  const [preview, setPreview] = useState<string | null>(null);
+  const [file, setFile] = useState<File | null>(null);
 
-  const capture = async (source: "camera" | "photos") => {
-    if (!Capacitor.isNativePlatform()) {
-      nav("/scan/review");
-      return;
-    }
-
-    setBusy(source);
+  const choose = async (value: File | null) => {
+    if (!value) return;
+    try {
+      if (value.size > MAX_IMAGE_BYTES) throw new Error("Choose a receipt photo under 6 MB.");
+      validateImage(new Uint8Array(await value.arrayBuffer()), value.type);
+      if (preview) URL.revokeObjectURL(preview);
+      setFile(value); setPreview(URL.createObjectURL(value)); setError("");
+    } catch (cause) { setError(cause instanceof Error ? cause.message : "That image could not be opened."); }
+  };
+  const native = async (source: "camera" | "photos") => {
+    try { await choose(await captureNativeReceipt(source)); }
+    catch (cause) { const message = cause instanceof Error ? cause.message : String(cause); if (!/cancel/i.test(message)) setError(message); }
+  };
+  const scan = async (mode: "sample" | "live") => {
     setError("");
     try {
-      const options = { quality: 85, targetWidth: 1800, targetHeight: 2400, correctOrientation: true };
-      const photo = source === "camera"
-        ? await Camera.takePhoto({ ...options, saveToGallery: false })
-        : (await Camera.chooseFromGallery({ ...options, allowMultipleSelection: false })).results?.[0];
-      if (photo) nav("/scan/review");
-    } catch (caught) {
-      const message = caught instanceof Error ? caught.message : String(caught);
-      if (!/cancel|no image picked|no media selected/i.test(message)) {
-        setError(/permission|denied|access/i.test(message)
-          ? "Camera or photo access is off. Allow it in Settings and try again."
-          : "That photo could not be opened. Please try another one.");
-      }
-    } finally {
-      setBusy(null);
-    }
+      if (mode === "live" && !signed) throw new Error("Sign in first so the receipt can be processed by your private Supabase kitchen.");
+      if (mode === "live" && !consent) throw new Error("Agree to the live AI receipt processing notice before continuing.");
+      const result = await startReceiptScan(file, mode);
+      nav("/scan/review", { state: { scan: result } });
+    } catch (cause) { setError(cause instanceof Error ? cause.message : "The receipt could not be scanned."); }
   };
 
-  return (
-    <div style={{ flex: 1, display: "flex", flexDirection: "column", background: "#1E1B18", color: "#fff" }}>
-      <header className="topbar" style={{ paddingBottom: 12 }}>
-        <button type="button" className="icon-btn" aria-label="Close" style={{ background: glass }} onClick={() => nav("/fridge/add")}><CloseIcon color="#fff" /></button>
-        <div role="tablist" aria-label="Scan mode" style={{ flex: 1, display: "flex", justifyContent: "center" }}>
-          <div style={{ display: "flex", background: glass, borderRadius: 999, padding: 3 }}>
-            {(["Receipt", "Groceries"] as const).map((l) => (
-              <button key={l} type="button" role="tab" aria-selected={mode === l} onClick={() => setMode(l)}
-                style={{ height: 36, padding: "0 16px", border: 0, borderRadius: 999, fontSize: 14, cursor: "pointer",
-                  background: mode === l ? "#fff" : "transparent", color: mode === l ? "var(--text-primary)" : "#fff", fontWeight: mode === l ? 600 : 400 }}>{l}</button>
-            ))}
-          </div>
-        </div>
-        <button type="button" className="icon-btn" aria-label="Flash" aria-pressed={flash} onClick={() => setFlash(!flash)}
-          style={{ background: flash ? "#fff" : glass, color: flash ? "var(--text-primary)" : "#fff" }}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M13 3 5 14h6l-1 7 8-11h-6z" /></svg>
-        </button>
-      </header>
-
-      <main style={{ flex: 1, position: "relative", margin: "8px 16px", borderRadius: 24, background: "#2A2622", overflow: "hidden" }}>
-        {r ? (
-          <div aria-hidden="true" style={{ position: "absolute", left: 82, right: 82, top: 54, bottom: 54, background: "#FFF8F1", borderRadius: 4, transform: "rotate(-2deg)", padding: "22px 18px", display: "flex", flexDirection: "column", gap: 10 }}>
-            <span style={{ height: 10, width: "60%", alignSelf: "center", background: "#D8CEC4", borderRadius: 3 }} />
-            <span style={{ height: 6, width: "40%", alignSelf: "center", background: "#E6DCD0", borderRadius: 3, marginBottom: 10 }} />
-            {widths.map((w, i) => (
-              <span key={i} style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-                <span style={{ height: 6, width: `${w}%`, background: "#E6DCD0", borderRadius: 3 }} /><span style={{ height: 6, width: 22, background: "#E6DCD0", borderRadius: 3 }} />
-              </span>
-            ))}
-            <span style={{ height: 1, background: "#E6DCD0", margin: "6px 0" }} />
-            <span style={{ display: "flex", justifyContent: "space-between" }}><span style={{ height: 8, width: "36%", background: "var(--primary)", borderRadius: 3 }} /><span style={{ height: 8, width: 28, background: "var(--primary)", borderRadius: 3 }} /></span>
-          </div>
-        ) : (
-          <div aria-hidden="true" style={{ position: "absolute", left: 40, right: 40, top: 120, bottom: 120, display: "grid", gridTemplateColumns: "repeat(3, minmax(0,1fr))", gap: 12, alignContent: "center" }}>
-            {[[88, "44px", "#E46F5A"], [110, "14px", "#E6B85A"], [72, "36px", "#A9412F"], [64, "12px", "#F2C66D"], [96, "48px 48px 16px 16px", "#BF4F3B"], [80, "16px", "#D9705C"]].map(([h, br, c], i) => (
-              <span key={i} style={{ height: h as number, borderRadius: br as string, background: c as string, alignSelf: i === 2 ? "end" : undefined }} />
-            ))}
-          </div>
-        )}
-        {corner({ left: 24, top: 24 }, "Left Top", "borderTopLeftRadius")}
-        {corner({ right: 24, top: 24 }, "Right Top", "borderTopRightRadius")}
-        {corner({ left: 24, bottom: 24 }, "Left Bottom", "borderBottomLeftRadius")}
-        {corner({ right: 24, bottom: 24 }, "Right Bottom", "borderBottomRightRadius")}
-      </main>
-
-      <p style={{ flexShrink: 0, margin: "10px 24px 0", textAlign: "center", fontSize: 15, lineHeight: 1.4 }}>
-        {r ? <>Fit the whole receipt in the frame.<br />We’ll read the food items for you.</> : "Lay your groceries out and snap. We’ll recognize what’s there."}
-      </p>
-
-      {error && <p role="alert" style={{ margin: "8px 24px 0", color: "#FFD7CF", textAlign: "center", fontSize: 13 }}>{error}</p>}
-      <div style={{ flexShrink: 0, minHeight: 150, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 40px max(12px, var(--safe-bottom))" }}>
-        <button type="button" aria-label="Choose from photos" disabled={busy !== null} onClick={() => void capture("photos")}
-          style={{ width: 52, height: 52, borderRadius: 12, border: "2px solid rgba(255,255,255,.6)", background: "#34302B", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", opacity: busy ? 0.6 : 1 }}>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" /><circle cx="9" cy="10" r="1.5" /><path d="m21 16-5-5-8 8" /></svg>
-        </button>
-        <button type="button" aria-label={busy === "camera" ? "Opening camera" : "Take photo"} aria-busy={busy === "camera"} disabled={busy !== null}
-          onClick={() => void capture("camera")} style={{ width: 76, height: 76, borderRadius: 38, border: "4px solid #fff", padding: 0, background: "transparent", display: "flex", alignItems: "center", justifyContent: "center", opacity: busy ? 0.72 : 1 }}>
-          <span style={{ width: 60, height: 60, borderRadius: 30, background: "#fff" }} />
-        </button>
-        <span style={{ width: 52, textAlign: "center", fontSize: 12, color: "#B3A79B" }}>{r ? "Long receipt? Take 2+" : ""}</span>
-      </div>
-    </div>
-  );
+  return <div className="scan-screen">
+    <header className="topbar"><button type="button" className="icon-btn scan-glass" aria-label="Close" onClick={() => nav("/fridge/add")}><CloseIcon color="#fff" /></button><b>Scan receipt</b><span className="topbar__side" /></header>
+    <main className="scan-content"><div className="scan-frame">{preview ? <img src={preview} alt="Receipt preview" /> : <div className="receipt-placeholder"><b>RECEIPT</b>{Array.from({ length: 12 }, (_, index) => <span key={index} />)}</div>}<i className="scan-corner scan-corner--tl" /><i className="scan-corner scan-corner--tr" /><i className="scan-corner scan-corner--bl" /><i className="scan-corner scan-corner--br" /></div><p>Fit the whole receipt in the frame.<br />You’ll review every food item before saving.</p>
+      <div className="scan-picker">{Capacitor.isNativePlatform() ? <><button className="btn btn--secondary" onClick={() => void native("photos")}>Choose photos</button><button className="scan-shutter" aria-label="Take photo" onClick={() => void native("camera")} /></> : <label className="btn btn--secondary">Choose receipt photo<input type="file" hidden accept="image/jpeg,image/png,image/webp" onChange={(e) => void choose(e.target.files?.[0] || null)} /></label>}</div>
+      {file && <label className="choice-row scan-consent"><input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} />I agree to send this receipt image to OpenAI through Ingredi’s Supabase function for extraction.</label>}
+      {error && <p className="form-error" role="alert">{error}</p>}
+    </main>
+    <div className="scan-actions"><button type="button" className="btn btn--secondary" disabled={busy} onClick={() => void scan("sample")}>Use sample receipt</button><button type="button" className="btn btn--primary" disabled={busy || !file} onClick={() => void scan("live")}>{busy ? "Reading…" : "Read my receipt"}</button></div>
+  </div>;
 }

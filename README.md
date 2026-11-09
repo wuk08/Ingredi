@@ -27,7 +27,7 @@ node scripts/build.mjs
 
 The native Xcode project is in `ios/`. Follow [the Mac/iPhone demo guide](docs/IOS-DEMO.md): install Xcode and Node, install the pinned dependencies, then run `ios:prepare` and `ios:open`. A Simulator or personal-device build is sufficient; no public release or TestFlight is needed. The guide includes the free Apple Account route.
 
-The iOS target now bundles the React prototype from `web/`, so its screens, flows, tokens, and interactions match the current web UI. The receipt screen opens the native camera or photo library on iOS, then continues through the prototype review flow. Prototype data remains local mock data; the existing backend-connected application is still in `public/`. The interface is bundled on-device and does not depend on a preview server.
+The iOS target bundles the React interface from `web/`, so its screens, flows, tokens, and interactions match the current web UI. That interface now calls the original modules in `public/lib/`: authenticated kitchen, profile, recipe, receipt-scan, and confirmation operations stay connected to Supabase, while the explicitly simulated community stays account-scoped in IndexedDB. Native camera/gallery capture continues through the real editable receipt review flow. The interface is bundled on-device and does not depend on a preview server.
 
 For ongoing Windows/Mac development, follow [the GitHub sync workflow](docs/SYNC-WORKFLOW.md). Pull the current source on the Mac, run `ios:prepare`, then run it in Xcode. Pushing code to GitHub alone does not update an installed app or deploy a Supabase function.
 
@@ -81,7 +81,7 @@ The API key is not needed for **Use the sample receipt**. In signed-in mode that
 - Files remain in the private bucket; automatic retention cleanup is outside this MVP. Do not upload receipts with personal details you do not want processed.
 - Scanner has a basic 20-scan/hour check per account; it is intended for a controlled hackathon demo, not public high-traffic use.
 
-`tests/` contains 61 automated tests covering receipts, native adapters, maps, residence lookup/setup, identity/residence isolation, student gates, migration, drafts/photos, and community interactions. Repository tests use a transactional storage double; browser walkthroughs exercise real IndexedDB. `supabase/tests/security.sql` contains 10 real Postgres tests, all wrapped in a transaction that rolls back its synthetic fixtures. Use the Supabase SQL editor or connected SQL tool to run it; do not copy test fixtures into production data.
+`tests/` contains 63 automated tests covering receipts, native adapters, the React-to-domain bridge, maps, residence lookup/setup, identity/residence isolation, student gates, migration, drafts/photos, and community interactions. Repository tests use a transactional storage double; browser walkthroughs exercise real IndexedDB. `supabase/tests/security.sql` contains 10 real Postgres tests, all wrapped in a transaction that rolls back its synthetic fixtures. Use the Supabase SQL editor or connected SQL tool to run it; do not copy test fixtures into production data.
 
 OpenAI errors distinguish API quota/billing failures from temporary rate limits, overload, invalid credentials and model access. Only allowlisted error codes, HTTP status and request IDs are saved in the scan metadata; raw provider messages and keys are never saved. Billing errors require account action and are not automatically retried. Temporary rate limits display the provider's retry interval when available.
 
@@ -91,7 +91,8 @@ The latest Supabase advisor reports one Auth setting warning: [leaked-password p
 
 ## Source map
 
-- `public/`: static browser app, styles, public config and shared domain logic.
+- `web/`: current React browser/iOS interface and its state bridge to the original domain modules.
+- `public/`: original static browser app, public config, and shared Supabase/community domain logic reused by React.
 - `public/features/`: kitchen/community views and the existing receipt/auth flows adapted to the new shell.
 - `public/lib/`: navigation, shared UI/illustrations, recipe discovery, kitchen access, and the account-scoped community repository.
 - `ios/`: generated Xcode demo project that bundles the `web/` prototype with Capacitor camera permissions.

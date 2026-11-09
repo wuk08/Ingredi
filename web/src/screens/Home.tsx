@@ -1,95 +1,21 @@
 import { Link } from "react-router-dom";
-import { Avatar } from "../components/Avatar";
+import { photos } from "../assets/photos";
 import { BellButton } from "../components/BellButton";
-import { useStore } from "../data/store";
-import { Photo } from "../components/PhotoPlaceholder";
-import { groups, nearbyPosts, recommended } from "../data/content";
-import shareBag from "../assets/illustrations/share-bag.svg";
-
-const chevron = <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m9 5 7 7-7 7" /></svg>;
+import { useAppState } from "../data/AppState";
+import { recommended } from "../data/content";
 
 export function Home() {
-  const { unreadNotifs } = useStore();
-  return (
-    <div className="screen-scroll" style={{ padding: "var(--screen-top) 0 24px", gap: 28 }}>
-      <header style={{ padding: "0 16px", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <h1 className="h1">Good morning, Jason!</h1>
-          <p className="body" style={{ margin: 0 }}>What do we want to cook today?</p>
-        </div>
-        <BellButton count={unreadNotifs.length} />
-      </header>
-
-      <section aria-label="Recipe recommendations" className="row-scroll">
-        {recommended.map((r) => (
-          <Link key={r.name} to={`/recipe/${r.id}`} style={{ width: 300, height: 180, borderRadius: 20, position: "relative", overflow: "hidden", display: "block" }}>
-            <Photo src={r.photo} alt={r.name} style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }} />
-            <span className="tag" style={{ position: "absolute", left: 12, top: 12, background: "#fff", color: "var(--text-primary)" }}>{r.tag}</span>
-            <span className="photo-scrim" aria-hidden="true" />
-            <span style={{ position: "absolute", left: 16, right: 16, bottom: 14, display: "flex", justifyContent: "space-between", alignItems: "flex-end", color: "#fff" }}>
-              <span className="title">{r.name}</span>
-              <span style={{ font: "400 13px/18px var(--font-text)", color: "rgba(255,255,255,.85)" }}>{r.time}</span>
-            </span>
-          </Link>
-        ))}
-      </section>
-
-      <section style={{ padding: "0 16px" }}>
-        <Link to="/messages" className="card" style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px" }}>
-          <span aria-hidden="true" style={{ width: 52, height: 52, borderRadius: 16, background: "var(--primary-tint)", display: "flex", alignItems: "flex-end", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
-            <img src={shareBag} width={46} height={46} alt="" />
-          </span>
-          <span style={{ flex: 1, display: "flex", flexDirection: "column", gap: 2 }}>
-            <span className="title" style={{ fontSize: 15 }}>Active shares &amp; requests</span>
-            <span className="small">1 item shared · 2 new requests</span>
-          </span>
-          {chevron}
-        </Link>
-      </section>
-
-      <section style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-        <h2 className="h2" style={{ padding: "0 16px" }}>Join Meal Prep Group!</h2>
-        <div className="row-scroll">
-          {groups.map((g) => (
-            <div key={g.title} className="box" style={{ width: 276, display: "flex", flexDirection: "column", gap: 12, padding: "12px 8px 8px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", padding: "0 2px" }}>
-                <span className="title">{g.title}</span>
-                <span className="small">{g.date}</span>
-              </div>
-              <span style={{ fontSize: 14, padding: "0 2px" }}>{g.menu}</span>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span className="avatar-stack">{g.people.map((p) => <Avatar key={p} name={p} size={28} ring="var(--accent-tint)" />)}</span>
-                <Link to="/meal-swap" className="btn btn--pill-white btn--sm" style={{ flex: 1, gap: 8 }}>
-                  Join Group <span className="caption">{g.count}</span>
-                </Link>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-        <div style={{ padding: "0 16px", display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-          <h2 className="h2">What’s up around you</h2>
-          <Link to="/nearby" style={{ fontSize: 13, fontWeight: 600, color: "var(--primary-ink)" }}>view all</Link>
-        </div>
-        <div className="row-scroll">
-          {nearbyPosts.map((p) => (
-            <div key={p.text} className="card" style={{ width: 236, padding: 10, display: "flex", flexDirection: "column", gap: 8 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <Avatar name={p.by} size={28} />
-                <span style={{ flex: 1, fontSize: 14 }}>{p.by}</span>
-              </div>
-              <span className="tag" style={{ alignSelf: "flex-start" }}>{p.type}</span>
-              <span style={{ fontSize: 15, minHeight: 40 }}>{p.text}</span>
-              <div style={{ display: "flex", gap: 6 }}>
-                <Link to="/post" className="btn btn--pill-white btn--sm" style={{ flex: 1 }}>View Detail</Link>
-                <Link to="/chat" className="btn btn--primary btn--sm" style={{ flex: 1, fontWeight: 600 }}>{p.cta}</Link>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-    </div>
-  );
+  const { profile, community, setupReady, setDialog } = useAppState();
+  const unread = (community.conversations || []).reduce((sum: number, chat: any) => sum + chat.unread, 0);
+  const activeOwn = (community.posts || []).filter((post: any) => post.owner === "you" && post.status === "active").length;
+  const groups = (community.groups || []).slice(0, 4);
+  const posts = (community.posts || []).filter((post: any) => post.owner !== "you" && post.status === "active").slice(0, 4);
+  return <div className="screen-scroll home-screen">
+    <header className="screen-heading"><span><h1 className="h1">Good morning, {profile.display_name.split(" ")[0]}!</h1><p className="body">What do we want to cook today?</p></span><BellButton count={unread} /></header>
+    <section className="row-scroll">{recommended.map((recipe) => <Link className="home-recipe" key={recipe.id} to={`/recipe/${recipe.id}`} style={{ backgroundImage: `url("${recipe.photo}")` }}><span className="tag">{recipe.tag}</span><span><b>{recipe.name}</b><small>{recipe.time}</small></span></Link>)}</section>
+    {!setupReady && <section className="home-community-cta"><span>⌂</span><div><b>Find your home community</b><small>Choose your apartment building or dorm.</small></div><button className="btn btn--primary btn--sm" onClick={() => setDialog("setup")}>Set up</button></section>}
+    <Link to="/messages" className="card feature-link home-activity"><span><b>Active shares &amp; requests</b><small>{activeOwn} active · {unread} unread message{unread === 1 ? "" : "s"}</small></span><b>›</b></Link>
+    <section className="form-stack"><div className="section-heading"><h2 className="h2">Join a meal prep group</h2><Link to="/nearby">See all</Link></div><div className="row-scroll">{groups.map((group: any) => <div className="box home-group" key={group.id}><span><b>{group.title}</b><small>{group.date} · {group.time}</small></span><p>{group.members.map((member: any) => member.dish).join(", ")}</p><Link to={`/meal-swap/${group.id}`} className="btn btn--secondary btn--sm">{group.members.some((member: any) => member.person === "you") ? "View group" : `Join group · ${group.members.length}/${group.capacity}`}</Link></div>)}</div></section>
+    <section className="form-stack"><div className="section-heading"><h2 className="h2">What’s up around you</h2><Link to="/nearby">View all</Link></div>{setupReady ? <div className="home-posts">{posts.map((post: any) => <article className="card" key={post.id}><span className="post-mini-art" style={{ backgroundImage: `url("${photos[/avocado/i.test(post.food) ? "three-avos" : /egg/i.test(post.food) ? "egg-drop-soup" : "bibimbap"]}")` }} /><span><small>{community.people[post.owner]?.name || "Neighbor"}</small><b>{post.title}</b><em>{post.type === "wanted" ? "Wanted" : post.type === "meal_prep" ? "Meal Prep" : "Available"} · {post.offer}</em></span><div><Link to={`/post/${post.id}`} className="btn btn--secondary btn--sm">View</Link><Link to={post.type === "meal_prep" ? `/meal-swap/${post.groupId}` : `/post/${post.id}`} className="btn btn--primary btn--sm">{post.type === "wanted" ? "Offer" : post.type === "meal_prep" ? "Join" : "Request"}</Link></div></article>)}</div> : <p className="small">Set up your residence to see posts from your building and neighborhood.</p>}</section>
+  </div>;
 }

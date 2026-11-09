@@ -1,37 +1,23 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Avatar } from "../components/Avatar";
-import { illustrations, type IllustrationName } from "../components/Illustration";
-import { dmThreads, groupThreads } from "../data/content";
-import type { PersonaName } from "../data/people";
+import { useAppState } from "../data/AppState";
+
+const initials = (name: string) => name.split(/\s+/).map((part) => part[0]).join("").slice(0, 2).toUpperCase();
 
 export function Messages() {
-  const [tab, setTab] = useState<"dm" | "grp">("dm");
-  const threads: { name: string; by?: PersonaName; art?: IllustrationName; tint?: string; time: string; context: string; last: string; unread: number }[] = tab === "dm" ? dmThreads : groupThreads;
-  return (
-    <>
-      <header style={{ flexShrink: 0, padding: "var(--screen-top) 16px 12px", display: "flex", flexDirection: "column", gap: 14 }}>
-        <h1 className="h1">Message</h1>
-        <div role="tablist" className="seg">
-          <button role="tab" aria-selected={tab === "dm"} onClick={() => setTab("dm")}>1:1</button>
-          <button role="tab" aria-selected={tab === "grp"} onClick={() => setTab("grp")}>Group</button>
-        </div>
-      </header>
-      <main className="screen-scroll" style={{ padding: "0 16px 16px" }}>
-        {threads.map((t) => (
-          <Link key={t.name} to={t.name === "Korean Food Week" ? "/chat/group" : "/chat"} style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 0", boxShadow: "0 1px 0 var(--divider)" }}>
-            {t.by ? <Avatar name={t.by} size={52} /> : <span aria-hidden="true" style={{ width: 52, height: 52, borderRadius: 16, flexShrink: 0, background: `${t.tint ?? "var(--surface-muted)"} ${t.art ? `url("${illustrations[t.art]}") center / 78% no-repeat` : ""}` }} />}
-            <span style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 3 }}>
-              <span style={{ display: "flex", justifyContent: "space-between", gap: 8 }}><span className="title">{t.name}</span><span className="caption" style={{ fontWeight: 400 }}>{t.time}</span></span>
-              <span className="caption" style={{ fontWeight: 400 }}>{t.context}</span>
-              <span style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "center" }}>
-                <span style={{ fontSize: 14, color: "var(--text-body)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{t.last}</span>
-                {t.unread > 0 && <span style={{ minWidth: 20, height: 20, borderRadius: 10, background: "var(--primary)", color: "#fff", fontSize: 11, fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{t.unread}</span>}
-              </span>
-            </span>
-          </Link>
-        ))}
-      </main>
-    </>
-  );
+  const { community, setupReady, setDialog } = useAppState();
+  const [tab, setTab] = useState<"dm" | "group">("dm");
+  if (!setupReady) return <main className="center-gate"><h1 className="h1">Your neighborhood conversations</h1><p className="body">Set up your residence to restore your building inbox and group chats.</p><button className="btn btn--primary" onClick={() => setDialog("setup")}>Set up my residence</button></main>;
+  const conversations = (community.conversations || []).filter((chat: any) => tab === "group" ? Boolean(chat.groupId) : !chat.groupId);
+  return <>
+    <header className="messages-header"><h1 className="h1">Messages</h1><div role="tablist" className="seg"><button role="tab" aria-selected={tab === "dm"} onClick={() => setTab("dm")}>1:1</button><button role="tab" aria-selected={tab === "group"} onClick={() => setTab("group")}>Group</button></div></header>
+    <main className="screen-scroll messages-list">{conversations.map((chat: any) => {
+      const group = chat.groupId ? community.groups.find((item: any) => item.id === chat.groupId) : null;
+      const person = !group ? community.people?.[chat.person] : null;
+      const post = chat.postId ? community.posts.find((item: any) => item.id === chat.postId) : null;
+      const name = group?.title || person?.name || "Conversation";
+      const last = chat.messages.at(-1);
+      return <Link key={chat.id} to={group ? `/chat/group/${chat.id}` : `/chat/${chat.id}`} className="message-row"><span className="message-avatar">{initials(name)}</span><span className="message-copy"><span className="message-title"><b>{name}</b><small>{last ? new Date(last.at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : ""}</small></span><span className="caption">{post?.title || group?.location || "Neighborhood exchange"}</span><span className="message-last">{last?.text || "Start the conversation"}{chat.unread > 0 && <b className="unread-count">{chat.unread}</b>}</span></span></Link>;
+    })}{!conversations.length && <div className="empty-state"><h2>No {tab === "group" ? "group " : ""}messages yet</h2><p>Request an item or join a meal prep group to start one.</p><Link to="/nearby" className="btn btn--primary">Browse nearby</Link></div>}</main>
+  </>;
 }

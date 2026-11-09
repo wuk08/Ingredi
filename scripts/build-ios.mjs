@@ -24,9 +24,10 @@ await build({
   },
 });
 
-// React uses element.style for the prototype's token-driven layout, so style
-// attributes must remain allowed. Scripts and network access stay local-only.
-const csp = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data: https://tiles.openfreemap.org; font-src 'self'; worker-src 'self'; connect-src 'self' https://tiles.openfreemap.org; object-src 'none'; base-uri 'self'; form-action 'self'";
+// React uses element.style for the token-driven layout. Auth, private kitchen
+// data, receipt scanning, address lookup, and maps retain the same explicit
+// network allow-list as the original frontend.
+const csp = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data: https://hdclurdjuziprukiuamq.supabase.co https://tiles.openfreemap.org; font-src 'self'; worker-src 'self'; connect-src 'self' https://hdclurdjuziprukiuamq.supabase.co wss://hdclurdjuziprukiuamq.supabase.co https://photon.komoot.io https://tiles.openfreemap.org; object-src 'none'; base-uri 'self'; form-action 'self'";
 const html=await readFile('dist/index.html','utf8');
 await writeFile('dist/index.html',html.replace('<head>',`<head>\n  <meta http-equiv="Content-Security-Policy" content="${csp}">`));
 console.log('Built the React prototype as the bundled iOS frontend. No local server is needed.');

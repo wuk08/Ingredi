@@ -43,6 +43,13 @@ test('native demo uses bundled assets and includes the camera plugin',async()=>{
   assert.match(swift,/CapacitorCamera/);assert.ok(!swift.includes('C:\\Users'));
   const build=await readFile(new URL('../scripts/build-ios.mjs',import.meta.url),'utf8');
   assert.match(build,/root:\s*'web'/);assert.doesNotMatch(build,/public\/app\.js/);
+  assert.match(build,/hdclurdjuziprukiuamq\.supabase\.co/);
+  assert.match(build,/photon\.komoot\.io/);
   const scanner=await readFile(new URL('../web/src/screens/ScanCamera.tsx',import.meta.url),'utf8');
-  assert.match(scanner,/Camera\.takePhoto/);assert.match(scanner,/Camera\.chooseFromGallery/);
+  assert.match(scanner,/captureNativeReceipt\(source\)/);
+  assert.match(scanner,/startReceiptScan\(file, mode\)/);
+  const state=await readFile(new URL('../web/src/data/AppState.tsx',import.meta.url),'utf8');
+  assert.match(state,/public\/lib\/api\.mjs/);
+  assert.match(state,/public\/lib\/community\.mjs/);
+  assert.match(state,/confirm_receipt/);
 });

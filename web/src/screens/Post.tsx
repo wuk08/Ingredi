@@ -1,65 +1,35 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import { photos } from "../assets/photos";
-import { Avatar } from "../components/Avatar";
-import { ChevronIcon, MoreIcon } from "../components/Icons";
-import { Photo } from "../components/PhotoPlaceholder";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { illustrations } from "../components/Illustration";
+import { MoreIcon } from "../components/Icons";
 import { TopBar } from "../components/TopBar";
-import { personas } from "../data/people";
+import { useAppState } from "../data/AppState";
+
+const label: Record<string, string> = { available: "Available", wanted: "Wanted", meal_prep: "Meal Prep", free: "Free", exchange: "Exchange", ingredients: "Ingredients", meals: "Meals", equipment: "Equipment" };
 
 export function Post() {
-  const [requested, setRequested] = useState(false);
-  return (
-    <>
-      <TopBar title="Post" right={<button type="button" className="icon-btn" aria-label="More options"><MoreIcon /></button>} />
-      <main className="screen-scroll" style={{ padding: "12px 16px 24px", gap: 18 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <Avatar name="Jack Lee" size={44} />
-          <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-            <span className="title">Jack Lee</span>
-            <span className="small">Community Level {personas["Jack Lee"].level} · 32 shares</span>
-          </div>
-          <span className="small">0.2 mi</span>
-        </div>
-
-        <Photo src={photos["three-avos"]} alt="Three ripe avocados" style={{ height: 240, borderRadius: 20 }} />
-
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          <div style={{ display: "flex", gap: 6 }}>
-            <span className="tag" style={{ background: "var(--primary)", color: "var(--text-on-primary)" }}>Available</span>
-            <span className="tag" style={{ color: "var(--text-primary)" }}>Free</span>
-            <span className="tag" style={{ color: "var(--text-primary)" }}>Ingredients</span>
-          </div>
-          <h2 className="h2" style={{ fontSize: 22, lineHeight: "28px" }}>Anyone wants free avocados?</h2>
-          <p className="body" style={{ margin: 0, fontSize: 15, lineHeight: 1.5 }}>Bought too many — 3 ripe avocados, best this week. Happy to hand off at my building lobby.</p>
-        </div>
-
-        <div className="rows">
-          <div><span style={{ color: "var(--text-secondary)" }}>Quantity</span><span>3</span></div>
-          <div><span style={{ color: "var(--text-secondary)" }}>Best before</span><span>Nov 4</span></div>
-          <div><span style={{ color: "var(--text-secondary)" }}>Pickup</span><span>Today, 5–8 PM</span></div>
-        </div>
-
-        <div className="mini-map" style={{ height: 120 }}>
-          <div className="road" style={{ left: 0, right: 0, top: 54, height: 12 }} />
-          <span aria-hidden="true" style={{ position: "absolute", left: "50%", top: 40, marginLeft: -18 }}><Avatar name="Jack Lee" size={36} ring="#fff" /></span>
-          <span className="tag" style={{ position: "absolute", left: 10, bottom: 10, background: "#fff", color: "var(--text-primary)" }}>Approx. location</span>
-        </div>
-
-        <Link to="/recipe" className="card" style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px" }}>
-          <span style={{ flex: 1, display: "flex", flexDirection: "column", gap: 2 }}>
-            <span className="small">Cook with this</span>
-            <span style={{ fontSize: 15, fontWeight: 600 }}>Avocado egg rice bowl</span>
-          </span>
-          <ChevronIcon />
-        </Link>
-      </main>
-      <div className="action-bar">
-        <Link to="/chat" className="btn btn--secondary" style={{ borderRadius: 14, fontSize: 15, fontWeight: 500 }}>Message</Link>
-        <button type="button" className={`btn ${requested ? "btn--secondary" : "btn--primary"}`} style={{ borderRadius: 14, fontSize: 15 }} onClick={() => setRequested(!requested)}>
-          {requested ? "Requested ✓" : "Request item"}
-        </button>
-      </div>
-    </>
-  );
+  const { id } = useParams();
+  const nav = useNavigate();
+  const { community, setupReady, setDialog, ensureCommunity, runCommunity, busy } = useAppState();
+  const post = (community.posts || []).find((item: any) => item.id === id) || (community.posts || []).find((item: any) => item.status === "active");
+  if (!setupReady) return <main className="center-gate"><h1 className="h1">Set up your residence</h1><p>Posts are scoped to your building and neighborhood.</p><button className="btn btn--primary" onClick={() => setDialog("setup")}>Continue setup</button></main>;
+  if (!post) return <main className="center-gate"><h1 className="h1">Post not found</h1><Link to="/nearby" className="btn btn--primary">Back to nearby</Link></main>;
+  const person = community.people?.[post.owner] || { name: post.owner === "you" ? "You" : "Neighbor" };
+  const chat = (community.conversations || []).find((item: any) => item.postId === post.id);
+  const request = async () => {
+    if (!ensureCommunity(true)) return;
+    const chatId = await runCommunity("request", post.id);
+    nav(`/chat/${chatId}`);
+  };
+  const cancel = async () => { if (confirm("Cancel this post?")) await runCommunity("cancel", post.id); };
+  return <>
+    <TopBar title="Post" right={post.owner === "you" ? <button type="button" className="icon-btn" aria-label="Cancel post" disabled={busy} onClick={() => void cancel()}><MoreIcon /></button> : undefined} />
+    <main className="screen-scroll post-detail">
+      <div className="post-owner"><span className="message-avatar">{person.name.split(/\s+/).map((part: string) => part[0]).join("").slice(0, 2)}</span><span><b>{person.name}</b><small>{post.owner === "you" ? "Your post" : `${person.distance || post.distance || 0} mi away`}</small></span><small>{post.visibility === "building" ? "My building" : "Neighborhood"}</small></div>
+      <div className="post-hero" style={{ backgroundImage: `url("${illustrations[post.type === "meal_prep" ? "bento" : /egg/i.test(post.food) ? "eggs" : /avocado/i.test(post.food) ? "avocado" : "bread"]}")` }} />
+      <section className="form-stack"><div className="tag-row"><span className="tag tag--primary">{label[post.type]}</span><span className="tag">{label[post.offer]}</span><span className="tag">{label[post.category]}</span></div><h1 className="h1">{post.title}</h1><p className="body">{post.description || "A little extra to share with the neighborhood."}</p></section>
+      <div className="rows"><div><span>Quantity</span><b>{post.quantity} {post.unit}</b></div>{post.expires_on && <div><span>Best before</span><b>{post.expires_on}</b></div>}<div><span>Pickup / meetup</span><b>{post.pickup}</b></div><div><span>Visibility</span><b>{post.visibility === "building" ? "My building" : "Neighborhood"}</b></div></div>
+      {post.type === "meal_prep" && <Link to={`/meal-swap/${post.groupId}`} className="card feature-link"><span><b>View meal prep plan</b><small>Choose a dish and join the group chat</small></span><b>›</b></Link>}
+    </main>
+    <div className="action-bar">{post.owner === "you" ? chat ? <Link to={`/chat/${chat.id}`} className="btn btn--primary">Open requests</Link> : <button className="btn btn--secondary" disabled>No requests yet</button> : post.type === "meal_prep" ? <Link to={`/meal-swap/${post.groupId}`} className="btn btn--primary">View &amp; join group</Link> : <><button type="button" className="btn btn--secondary" disabled={busy} onClick={() => void request()}>Message</button><button type="button" className="btn btn--primary" disabled={busy || post.status === "completed" || post.status === "cancelled"} onClick={() => void request()}>{post.status === "reserved" ? "Open request" : "Request item"}</button></>}</div>
+  </>;
 }
