@@ -54,7 +54,6 @@ export function mountMap(options, { loadLibrary = loadMapLibrary, workerUrl } = 
   return () => { if (disposed) return; disposed = true; dispose(); notice.remove(); };
 }
 export function mountVectorMap({ element, posts, selected, view, location, residenceId, residenceName, onSelect, onView, mapStyle, notice = mapNotice(element) }, GL) {
-  const touch = Boolean(globalThis.matchMedia?.('(pointer: coarse)').matches);
   const initial = view || defaultView(location);
   // Keep wheel events out of map gesture handlers without cancelling page scrolling.
   const pageWheel = event => event.stopPropagation();
@@ -65,8 +64,8 @@ export function mountVectorMap({ element, posts, selected, view, location, resid
     center: [initial.center[1], initial.center[0]], zoom: initial.zoom - 1,
     minZoom: 1, maxZoom: 18, maxPitch: 0,
     // Double-taps/clicks must not change zoom while browsing listings.
-    scrollZoom: false, doubleClickZoom: false, cooperativeGestures: touch,
-    dragRotate: false, touchPitch: false,
+    scrollZoom: false, doubleClickZoom: false, cooperativeGestures: false,
+    dragPan: true, touchZoomRotate: true, dragRotate: false, touchPitch: false,
     attributionControl: false, fadeDuration: 0,
     renderWorldCopies: false
   });
