@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { DemoRepository, actions, filterPosts, seedCommunity, ensureResidenceState } from '../public/lib/community.mjs';
+import { DemoRepository, actions, communityView, filterPosts, seedCommunity, ensureResidenceState, uniqueCommunityFeed } from '../public/lib/community.mjs';
 import { catalog,discover } from '../public/lib/recipes.mjs';
 import { parseRoute } from '../public/lib/navigation.mjs';
 
@@ -29,6 +29,15 @@ test('filters combine search, post type, category, offer, and sample distance',(
   const data=seedCommunity();assert.deepEqual(filterPosts(data.posts,{search:'avocado',type:'available',category:'ingredients',offer:'free',distance:.5}).map(p=>p.id),['avocados']);
   assert.equal(filterPosts(data.posts,{search:'not a match'}).length,0);assert.equal(filterPosts(data.posts,{category:'equipment',distance:.5}).length,0);
   assert.equal(filterPosts(data.posts,{own:true,distance:99}).every(p=>p.owner==='you'),true);
+});
+test('mixed home feed collapses matching scope samples without removing either scoped record',()=>{
+  const data=ensureResidenceState(seedCommunity());actions.student(data,{isStudent:false});actions.residence(data,{name:'Test apartments',address:'100 Test Street, Test City',kind:'apartment',center:[40,-74]});
+  const view=communityView(data),groups=view.groups.filter(group=>group.title==='Korean Food Week'),posts=view.posts.filter(post=>post.owner==='jack'&&post.title==='Anyone wants free avocados?');
+  assert.equal(groups.length,2);assert.equal(posts.length,2);
+  assert.equal(uniqueCommunityFeed(view.groups,'groups').filter(group=>group.title==='Korean Food Week').length,1);
+  assert.equal(uniqueCommunityFeed(view.posts,'posts').filter(post=>post.owner==='jack'&&post.title==='Anyone wants free avocados?').length,1);
+  assert.equal(filterPosts(view.posts,{scope:'building',residenceId:data.activeResidenceId}).some(post=>post.title==='Anyone wants free avocados?'),true);
+  assert.equal(filterPosts(view.posts,{scope:'neighborhood'}).some(post=>post.title==='Anyone wants free avocados?'),true);
 });
 test('requesting twice reuses the conversation and its opening messages',()=>{
   const data=seedCommunity(),a=actions.request(data,'avocados'),b=actions.request(data,'avocados');assert.equal(a,b);assert.equal(data.conversations.find(c=>c.id===a).messages.length,2);assert.equal(data.posts.find(p=>p.id==='avocados').status,'reserved');

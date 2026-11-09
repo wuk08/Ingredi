@@ -25,6 +25,25 @@ function filterPosts(posts, { search = "", type = "all", category = "all", offer
   const query = search.trim().toLowerCase();
   return posts.filter((p) => (own ? p.owner === "you" : p.status === "active" || p.status === "reserved") && (!query || `${p.title} ${p.description} ${p.food}`.toLowerCase().includes(query)) && (type === "all" || p.type === type) && (category === "all" || p.category === category) && (offer === "all" || p.offer === offer) && (scope !== 'building' || p.residenceId === residenceId) && (scope !== 'neighborhood' || p.visibility === 'neighborhood') && (scope === 'building' || p.distance <= Number(distance))).sort((a, b) => a.distance - b.distance);
 }
+// Home combines building and neighborhood scopes. Collapse matching sample cards there while
+// leaving both records intact for each scope's dedicated feed.
+function uniqueCommunityFeed(items, kind) {
+  const cards = [], indexes = new Map();
+  const keyFor = item => {
+    if (kind === 'posts') {
+      if (item.owner === 'you') return `post:${item.id}`;
+      return ['post', item.owner, item.title, item.type, item.category, item.offer, item.food].join('\u001f');
+    }
+    return ['group', item.title, item.description, item.date, item.time, item.capacity, ...(item.dishes || []).slice().sort()].join('\u001f');
+  };
+  const priority = item => (kind === 'groups' && item.members?.some(member => member.person === 'you') ? 8 : 0) + (kind === 'posts' && item.status !== 'active' ? 4 : 0) + (item.visibility === 'building' ? 2 : 0);
+  for (const item of items || []) {
+    const key = keyFor(item), index = indexes.get(key);
+    if (index === undefined) { indexes.set(key, cards.length); cards.push(item); }
+    else if (priority(item) > priority(cards[index])) cards[index] = item;
+  }
+  return cards;
+}
 const communityKeys = ['people', 'posts', 'groups', 'conversations', 'draft', 'completions', 'ratings', 'impact'];
 function ensureResidenceState(data) {
   data.residences ||= [];
@@ -310,6 +329,7 @@ export {
   IndexedDBStorage,
   actions,
   filterPosts,
+  uniqueCommunityFeed,
   communityView,
   ensureResidenceState,
   seedCommunity

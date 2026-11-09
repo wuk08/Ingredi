@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { uniqueCommunityFeed } from "../../../public/lib/community.mjs";
 import { photos } from "../assets/photos";
 import { Avatar } from "../components/Avatar";
 import { BellButton } from "../components/BellButton";
@@ -9,8 +10,8 @@ export function Home() {
   const { profile, community, setupReady, setDialog } = useAppState();
   const unread = (community.conversations || []).reduce((sum: number, chat: any) => sum + chat.unread, 0);
   const activeOwn = (community.posts || []).filter((post: any) => post.owner === "you" && post.status === "active").length;
-  const groups = (community.groups || []).slice(0, 4);
-  const posts = (community.posts || []).filter((post: any) => post.owner !== "you" && post.status === "active").slice(0, 4);
+  const groups = uniqueCommunityFeed(community.groups || [], "groups").slice(0, 4);
+  const posts = uniqueCommunityFeed(community.posts || [], "posts").filter((post: any) => post.owner !== "you" && post.status === "active").slice(0, 4);
   return <div className="screen-scroll home-screen">
     <header className="screen-heading"><span><h1 className="h1">Good morning, {profile.display_name.split(" ")[0]}!</h1><p className="body">What do we want to cook today?</p></span><BellButton count={unread} /></header>
     <section className="row-scroll">{recommended.map((recipe) => <Link className="home-recipe" key={recipe.id} to={`/recipe/${recipe.id}`} style={{ backgroundImage: `url("${recipe.photo}")` }}><span className="tag">{recipe.tag}</span><span><b>{recipe.name}</b><small>{recipe.time}</small></span></Link>)}</section>
