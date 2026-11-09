@@ -53,7 +53,7 @@ export function mountMap(options, { loadLibrary = loadMapLibrary, workerUrl } = 
   });
   return () => { if (disposed) return; disposed = true; dispose(); notice.remove(); };
 }
-export function mountVectorMap({ element, posts, selected, view, location, residenceId, residenceName, onSelect, onView, mapStyle, notice = mapNotice(element) }, GL) {
+export function mountVectorMap({ element, posts, selected, view, location, residenceId, residenceName, avatarFor, onSelect, onView, mapStyle, notice = mapNotice(element) }, GL) {
   const initial = view || defaultView(location);
   // Keep wheel events out of map gesture handlers without cancelling page scrolling.
   const pageWheel = event => event.stopPropagation();
@@ -97,7 +97,9 @@ export function mountVectorMap({ element, posts, selected, view, location, resid
     button.className = `real-map-pin ${p.id === selected ? 'selected' : ''}`;
     button.title = label;
     button.setAttribute('aria-label', label);
+    const avatar = !same && avatarFor?.(p.owner);
     if (same) button.textContent = String(buildingPosts.length);
+    else if (avatar) { button.classList.add('has-avatar'); button.style.backgroundImage = `url("${avatar}")`; }
     else button.innerHTML = icon('pin');
     button.onclick = event => {
       event.preventDefault(); event.stopPropagation();

@@ -2,11 +2,13 @@ import { useEffect, useRef, useState } from "react";
 import mapWorkerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?url";
 import { defaultView, mountMap } from "../../../public/lib/nearby-map.mjs";
 import residenceStyle from "../../../public/maps/residence-style.json";
+import { personas } from "../data/people";
 import { LocateIcon } from "./Icons";
 
 type Props = {
   location: [number, number];
   posts: any[];
+  people?: Record<string, { name: string }>;
   selected?: string;
   residenceId?: string;
   residenceName?: string;
@@ -16,7 +18,7 @@ type Props = {
 
 const loadMapLibre = () => import("maplibre-gl");
 
-export function ResidenceMap({ location, posts, selected, residenceId, residenceName, scope, onSelect }: Props) {
+export function ResidenceMap({ location, posts, people = {}, selected, residenceId, residenceName, scope, onSelect }: Props) {
   const element = useRef<HTMLDivElement>(null);
   const view = useRef(defaultView(location));
   const [centerRequest, setCenterRequest] = useState(0);
@@ -38,10 +40,14 @@ export function ResidenceMap({ location, posts, selected, residenceId, residence
       residenceId,
       residenceName,
       mapStyle: residenceStyle,
+      avatarFor: (owner: string) => {
+        const name = people[owner]?.name;
+        return name ? (personas as Record<string, { photo: string }>)[name]?.photo : undefined;
+      },
       onSelect,
       onView: (next: { center: [number, number]; zoom: number }) => { view.current = next; },
     }, { loadLibrary: loadMapLibre, workerUrl: mapWorkerUrl });
-  }, [centerRequest, locationKey, onSelect, posts, residenceId, residenceName, scope, selected]);
+  }, [centerRequest, locationKey, onSelect, people, posts, residenceId, residenceName, scope, selected]);
 
   return <div className="real-nearby-map">
     <div ref={element} className="real-nearby-map__canvas map-canvas" aria-label={`Interactive street map centered on ${residenceName || "your residence"}`} />

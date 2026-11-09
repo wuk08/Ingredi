@@ -43,7 +43,7 @@ export function Nearby() {
   if (scope === "neighborhood" && !home?.center) return <main className="center-gate"><h1 className="h1">Add your building’s map location.</h1><p className="body">Your building list works now. Confirm a map location to browse the neighborhood.</p><button type="button" className="btn btn--primary" onClick={() => setDialog("setup")}>Add a map location</button><button type="button" className="btn btn--ghost" onClick={() => setScope("building")}>Back to my building</button></main>;
 
   return <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
-    {isMap ? <><ResidenceMap location={home.center} posts={posts} selected={selectedPost?.id} residenceId={home.id} residenceName={home.name} scope={scope} onSelect={setSelected} />
+    {isMap ? <><ResidenceMap location={home.center} posts={posts} people={community.people} selected={selectedPost?.id} residenceId={home.id} residenceName={home.name} scope={scope} onSelect={setSelected} />
       {selectedPost && <Link to={`/post/${selectedPost.id}`} className="nearby-preview"><PostRow post={selectedPost} /></Link>}</> : <main className="nearby-list"><p className="small">{posts.length} sample listing{posts.length === 1 ? "" : "s"} {scope === "building" ? "in your building" : `within ${distance} mi`}</p>{posts.map((post: any) => <Link key={post.id} to={`/post/${post.id}`} className="card nearby-row"><PostRow post={post} /></Link>)}{!posts.length && <div className="empty-state"><h2>No matching listings</h2><p>Try another search or clear your filters.</p></div>}</main>}
 
     <header className={`nearby-controls${isMap ? "" : " nearby-controls--solid"}`}>

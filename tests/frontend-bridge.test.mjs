@@ -29,3 +29,21 @@ test('new UI exposes original residence, verification, scope, messaging, and exc
   assert.match(group, /runCommunity\("join"/);
   for (const feature of ['updateProfile', 'preferences', 'resetCommunity', 'logout']) assert.match(profile, new RegExp(feature));
 });
+
+test('main user portraits remain connected to the functional community UI and map', async () => {
+  const [avatar, people, mapModule, ...screens] = await Promise.all([
+    source('web/src/components/Avatar.tsx'),
+    source('web/src/data/people.ts'),
+    source('public/lib/nearby-map.mjs'),
+    ...['Home', 'Messages', 'Chat', 'Post', 'MealSwap', 'My'].map(name => source(`web/src/screens/${name}.tsx`)),
+  ]);
+  assert.match(avatar, /personas as Record/);
+  assert.match(avatar, /initials\(name\)/, 'custom profile names keep a readable fallback');
+  for (const index of [1, 2, 3, 5, 6, 7, 8]) assert.match(people, new RegExp(`ingredi-avatar-${String(index).padStart(2, '0')}\\.png`));
+  for (const screen of screens) {
+    assert.match(screen, /import \{ Avatar \}/);
+    assert.match(screen, /<Avatar/);
+  }
+  assert.match(mapModule, /avatarFor\?\.\(p\.owner\)/);
+  assert.match(mapModule, /classList\.add\('has-avatar'\)/);
+});

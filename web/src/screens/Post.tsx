@@ -1,4 +1,5 @@
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { Avatar } from "../components/Avatar";
 import { illustrations } from "../components/Illustration";
 import { MoreIcon } from "../components/Icons";
 import { TopBar } from "../components/TopBar";
@@ -24,7 +25,7 @@ export function Post() {
   return <>
     <TopBar title="Post" right={post.owner === "you" ? <button type="button" className="icon-btn" aria-label="Cancel post" disabled={busy} onClick={() => void cancel()}><MoreIcon /></button> : undefined} />
     <main className="screen-scroll post-detail">
-      <div className="post-owner"><span className="message-avatar">{person.name.split(/\s+/).map((part: string) => part[0]).join("").slice(0, 2)}</span><span><b>{person.name}</b><small>{post.owner === "you" ? "Your post" : `${person.distance || post.distance || 0} mi away`}</small></span><small>{post.visibility === "building" ? "My building" : "Neighborhood"}</small></div>
+      <div className="post-owner"><Avatar name={person.name} size={50} /><span><b>{person.name}</b><small>{post.owner === "you" ? "Your post" : `${person.distance || post.distance || 0} mi away`}</small></span><small>{post.visibility === "building" ? "My building" : "Neighborhood"}</small></div>
       <div className="post-hero" style={{ backgroundImage: `url("${illustrations[post.type === "meal_prep" ? "bento" : /egg/i.test(post.food) ? "eggs" : /avocado/i.test(post.food) ? "avocado" : "bread"]}")` }} />
       <section className="form-stack"><div className="tag-row"><span className="tag tag--primary">{label[post.type]}</span><span className="tag">{label[post.offer]}</span><span className="tag">{label[post.category]}</span></div><h1 className="h1">{post.title}</h1><p className="body">{post.description || "A little extra to share with the neighborhood."}</p></section>
       <div className="rows"><div><span>Quantity</span><b>{post.quantity} {post.unit}</b></div>{post.expires_on && <div><span>Best before</span><b>{post.expires_on}</b></div>}<div><span>Pickup / meetup</span><b>{post.pickup}</b></div><div><span>Visibility</span><b>{post.visibility === "building" ? "My building" : "Neighborhood"}</b></div></div>

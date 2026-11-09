@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { Avatar } from "../components/Avatar";
 import { useAppState } from "../data/AppState";
-
-const initials = (name: string) => name.split(/\s+/).map((part) => part[0]).join("").slice(0, 2).toUpperCase();
 
 export function Messages() {
   const { community, setupReady, setDialog } = useAppState();
@@ -17,7 +16,8 @@ export function Messages() {
       const post = chat.postId ? community.posts.find((item: any) => item.id === chat.postId) : null;
       const name = group?.title || person?.name || "Conversation";
       const last = chat.messages.at(-1);
-      return <Link key={chat.id} to={group ? `/chat/group/${chat.id}` : `/chat/${chat.id}`} className="message-row"><span className="message-avatar">{initials(name)}</span><span className="message-copy"><span className="message-title"><b>{name}</b><small>{last ? new Date(last.at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : ""}</small></span><span className="caption">{post?.title || group?.location || "Neighborhood exchange"}</span><span className="message-last">{last?.text || "Start the conversation"}{chat.unread > 0 && <b className="unread-count">{chat.unread}</b>}</span></span></Link>;
+      const members = group?.members.slice(0, 3).map((member: any) => community.people?.[member.person]?.name).filter(Boolean) || [];
+      return <Link key={chat.id} to={group ? `/chat/group/${chat.id}` : `/chat/${chat.id}`} className="message-row">{group ? <span className="avatar-stack avatar-stack--message">{members.map((memberName: string) => <Avatar key={memberName} name={memberName} size={34} ring="var(--bg)" />)}</span> : <Avatar name={name} size={52} />}<span className="message-copy"><span className="message-title"><b>{name}</b><small>{last ? new Date(last.at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : ""}</small></span><span className="caption">{post?.title || group?.location || "Neighborhood exchange"}</span><span className="message-last">{last?.text || "Start the conversation"}{chat.unread > 0 && <b className="unread-count">{chat.unread}</b>}</span></span></Link>;
     })}{!conversations.length && <div className="empty-state"><h2>No {tab === "group" ? "group " : ""}messages yet</h2><p>Request an item or join a meal prep group to start one.</p><Link to="/nearby" className="btn btn--primary">Browse nearby</Link></div>}</main>
   </>;
 }
