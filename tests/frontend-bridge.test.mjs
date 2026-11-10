@@ -21,6 +21,17 @@ test('mock Apple and Google entry points preserve real email and password authen
   assert.match(api, /grant_type=password/);assert.match(api, /auth\/v1\/signup/);
 });
 
+test('section heading primary links retain readable button text', async () => {
+  const [cook, styles] = await Promise.all([
+    source('web/src/screens/Cook.tsx'),
+    source('web/src/theme/global.css'),
+  ]);
+  assert.match(cook, /className="btn btn--primary btn--sm">\+ Fill up fridge/);
+  assert.match(styles, /\.btn--primary\s*\{[^}]*color:\s*var\(--text-on-primary\)/);
+  assert.match(styles, /\.section-heading a:not\(\.btn\)/);
+  assert.doesNotMatch(styles, /\.section-heading a\s*\{/);
+});
+
 test('new UI exposes original residence, verification, scope, messaging, and exchange actions', async () => {
   const [dialogs, nearby, map, chat, post, group, profile] = await Promise.all([
     source('web/src/components/CommunityDialogs.tsx'),
