@@ -46,6 +46,27 @@ test('fridge and receipt close actions cannot bounce between each other', async 
   assert.match(receipt, /onClick=\{\(\) => nav\("\/fridge\/add", \{ replace: true \}\)\}/);
 });
 
+test('receipt scanner is capture-first and keeps the sample as a secondary fallback', async () => {
+  const [scanner, login, api, capture, state] = await Promise.all([
+    source('web/src/screens/ScanCamera.tsx'),
+    source('web/src/screens/Login.tsx'),
+    source('public/lib/api.mjs'),
+    source('public/lib/capture.mjs'),
+    source('web/src/data/AppState.tsx'),
+  ]);
+  assert.match(scanner, /Take receipt photo/);
+  assert.match(scanner, /Choose from Photos/);
+  assert.match(scanner, /Scan receipt/);
+  assert.match(scanner, /private Supabase storage/);
+  assert.match(scanner, /Preview the labeled sample instead/);
+  assert.doesNotMatch(scanner, /className="receipt-placeholder"/);
+  assert.match(login, /returnTo === "\/scan"/);
+  assert.match(capture, /Camera\.takePhoto/);
+  assert.match(api, /storage\/v1\/object\/receipts/);
+  assert.match(api, /functions\/v1\/scan-receipt/);
+  assert.match(state, /Take or choose a receipt photo first/);
+});
+
 test('simple pantry categories preserve photos and the live My fridge screen', async () => {
   const [app, cook, fridge, categories, home, recipe, scanDone, profile] = await Promise.all([
     source('web/src/App.tsx'),

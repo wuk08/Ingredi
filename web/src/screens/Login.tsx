@@ -1,14 +1,16 @@
 import { useState, type FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Logotype } from "../components/Logotype";
 import { useAppState } from "../data/AppState";
 
 /** Supabase-backed sign in with a device-local demo fallback. */
 export function Login() {
   const go = useNavigate();
+  const location = useLocation();
   const { authenticate, mockAuthenticate, enterDemo, signed, busy } = useAppState();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [message, setMessage] = useState("");
+  const returnTo = location.state && typeof location.state === "object" && "returnTo" in location.state && location.state.returnTo === "/scan" ? "/scan" : "/home";
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -17,7 +19,7 @@ export function Login() {
     try {
       const result = await authenticate(mode, String(values.get("email")), String(values.get("password")));
       if (result === "confirm") setMessage("Check your email to confirm your Supabase account, then sign in.");
-      else go("/home");
+      else go(returnTo, { replace: true });
     } catch (cause) {
       setMessage(cause instanceof Error ? cause.message : "Sign in failed.");
     }
@@ -31,7 +33,8 @@ export function Login() {
 
   return <div className="login-screen">
     <div className="login-brand"><h1><Logotype /></h1><p className="body">Cook what you have.<br />Share what you don’t need.</p></div>
-    {signed ? <div className="form-stack"><p className="small">Your private Supabase kitchen is connected.</p><button type="button" className="btn btn--primary" onClick={() => go("/home")}>Continue to my kitchen</button></div> : <>
+    {signed ? <div className="form-stack"><p className="small">Your private Supabase kitchen is connected.</p><button type="button" className="btn btn--primary" onClick={() => go(returnTo, { replace: true })}>{returnTo === "/scan" ? "Continue to receipt scanner" : "Continue to my kitchen"}</button></div> : <>
+      {returnTo === "/scan" && <p className="login-scan-note">Email sign-in is required so your receipt can be uploaded privately and the extracted groceries can be saved to your Supabase fridge.</p>}
       <div className="login-providers" aria-describedby="mock-auth-note">
         <button type="button" className="btn login-submit login-provider login-provider--apple" disabled={busy} onClick={() => void useMockProvider("Apple")}><span className="login-provider__mark" aria-hidden="true"></span>{mode === "signup" ? "Sign up with Apple" : "Sign in with Apple"}<small>Mock</small></button>
         <button type="button" className="btn login-submit login-provider login-provider--google" disabled={busy} onClick={() => void useMockProvider("Google")}><span className="login-provider__mark login-provider__mark--google" aria-hidden="true">G</span>{mode === "signup" ? "Sign up with Google" : "Sign in with Google"}<small>Mock</small></button>

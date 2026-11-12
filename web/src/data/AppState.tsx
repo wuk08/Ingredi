@@ -221,6 +221,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
   const startReceiptScan = useCallback(async (file: File | null, mode: "sample" | "live") => {
     if (mode === "live" && !signed) throw new Error("Sign in to scan a personal receipt with the Supabase backend.");
+    if (mode === "live" && !file) throw new Error("Take or choose a receipt photo first.");
     setBusy(true);
     try {
       if (mode === "sample" && !signed) return { id: crypto.randomUUID(), status: "processed", extracted_items: copy(SAMPLE_SCAN.items), metadata: { mode: "sample", merchant: SAMPLE_SCAN.merchant, skipped_non_food: SAMPLE_SCAN.skipped_non_food, warnings: SAMPLE_SCAN.warnings }, local: true };

@@ -30,9 +30,9 @@ export async function captureNativeReceipt(source, { loadCamera = () => import('
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error?.message || '');
     if (/cancel|no image picked|no media selected/i.test(message)) return null;
-    if (/permission|denied|access.*(off|disable)/i.test(message)) throw new Error('Photo access is unavailable. Check Ingredi’s camera/photo permissions in Settings, or use the demo image.');
-    if (/camera.*(unavailable|not available|not supported)|simulator/i.test(message)) throw new Error('The camera is unavailable here. Choose Photos or load the demo image.');
+    if (/permission|denied|access.*(off|disable)/i.test(message)) throw new Error('Photo access is unavailable. Check Ingredi’s camera/photo permissions in Settings, or choose a receipt from Photos.');
+    if (/camera.*(unavailable|not available|not supported)|simulator/i.test(message)) throw new Error('The camera is unavailable here. Choose a receipt from Photos instead.');
     if (/^(Choose |The selected photo |This file |Your receipt photo )/.test(message)) throw error;
-    throw new Error('The photo could not be opened. Choose another photo or load the demo image.');
+    throw new Error('The receipt photo could not be opened. Choose another photo.');
   }
 }
