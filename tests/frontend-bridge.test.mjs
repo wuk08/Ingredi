@@ -37,6 +37,15 @@ test('iOS shell prevents accidental double-tap zoom across the whole app', async
   assert.match(styles, /\*, \*::before, \*::after\s*\{[^}]*touch-action:\s*manipulation/);
 });
 
+test('fridge and receipt close actions cannot bounce between each other', async () => {
+  const [fridge, receipt] = await Promise.all([
+    source('web/src/screens/AddIngredient.tsx'),
+    source('web/src/screens/ScanCamera.tsx'),
+  ]);
+  assert.match(fridge, /onBack=\{\(\) => nav\("\/cook", \{ replace: true \}\)\}/);
+  assert.match(receipt, /onClick=\{\(\) => nav\("\/fridge\/add", \{ replace: true \}\)\}/);
+});
+
 test('current UI uses the original always-light green palette and leaf-free ingredi period wordmark', async () => {
   const [tokenCss, tokenJson, logo, logoCss, html, main, shell, welcome] = await Promise.all([
     source('web/src/theme/tokens.css'),

@@ -28,7 +28,7 @@ export function AddIngredient() {
 
   return (
     <>
-      <TopBar close title="Fill up fridge" />
+      <TopBar close title="Fill up fridge" onBack={() => nav("/cook", { replace: true })} />
       <main className="screen-scroll" style={{ padding: "12px 16px 24px", gap: 22 }}>
         <form style={{ display: "flex", gap: 8 }} onSubmit={(e) => { e.preventDefault(); add(draft.trim()); }}>
           <label className="card" style={{ flex: 1, height: 48, borderRadius: 24, display: "flex", alignItems: "center", gap: 10, padding: "0 16px", minWidth: 0 }}>
