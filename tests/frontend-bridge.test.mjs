@@ -32,6 +32,11 @@ test('section heading primary links retain readable button text', async () => {
   assert.doesNotMatch(styles, /\.section-heading a\s*\{/);
 });
 
+test('iOS shell prevents accidental double-tap zoom across the whole app', async () => {
+  const styles = await source('web/src/theme/global.css');
+  assert.match(styles, /\*, \*::before, \*::after\s*\{[^}]*touch-action:\s*manipulation/);
+});
+
 test('current UI uses the original always-light green palette and leaf-free ingredi period wordmark', async () => {
   const [tokenCss, tokenJson, logo, logoCss, html, main, shell, welcome] = await Promise.all([
     source('web/src/theme/tokens.css'),
