@@ -37,13 +37,17 @@ export function validateExtraction(value) {
   const items = value.items.map((item,index) => {
     // Receipts often print weights with three decimals, while pantry storage
     // uses two. Normalize the candidate, preserve raw_line and request review.
+    // If the model cannot infer a usable quantity, keep the grocery line and
+    // make that one field reviewable instead of failing the entire receipt.
     const quantity = item?.quantity;
     const rounded = typeof quantity === 'number' && Number.isFinite(quantity) ? Math.round((quantity+Number.EPSILON)*100)/100 : quantity;
     const adjusted = typeof quantity === 'number' && quantity >= 0.01 && quantity <= 10000 && Math.abs(quantity-rounded)>1e-7;
-    const clean = validateItems([{ ...item, quantity:adjusted?rounded:quantity, expires_on: null }])[0];
+    const defaulted = quantity === 0;
+    const clean = validateItems([{ ...item, quantity:defaulted?1:adjusted?rounded:quantity, unit:defaulted?'item':item?.unit, expires_on: null }])[0];
     if (!['high', 'medium', 'low'].includes(item.confidence) || typeof item.raw_line !== 'string') throw new Error('Invalid receipt extraction.');
     if (adjusted) quantityWarnings.push(`The quantity on food line ${index+1} was rounded to two decimal places. Check it against the receipt.`);
-    return { ...clean, confidence: adjusted&&item.confidence==='high'?'medium':item.confidence, raw_line: item.raw_line.slice(0, 160) };
+    if (defaulted) quantityWarnings.push(`The quantity on food line ${index+1} could not be verified, so it was set to 1 item. Check it against the receipt.`);
+    return { ...clean, confidence: defaulted?'low':adjusted&&item.confidence==='high'?'medium':item.confidence, raw_line: item.raw_line.slice(0, 160) };
   });
   return { items, merchant: typeof value.merchant === 'string' ? value.merchant.slice(0, 100) : null, warnings: [...quantityWarnings,...value.warnings.filter(w => typeof w === 'string')].slice(0, 10).map(w => w.slice(0, 240)), skipped_non_food: value.skipped_non_food };
 }

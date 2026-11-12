@@ -63,9 +63,19 @@ test('live extraction asks OpenAI to interpret register abbreviations while pres
   assert.match(lastAiRequest.instructions,/BNLS CHKN THGH/);
   assert.match(lastAiRequest.instructions,/Never leave an understandable item as register shorthand/);
   assert.match(lastAiRequest.input[0].content[0].text,/interpret abbreviated item names/);
+  assert.equal(lastAiRequest.text.format.schema.properties.items.items.properties.quantity.minimum,0.01);
+  assert.equal(lastAiRequest.text.format.schema.properties.items.items.properties.quantity.maximum,10000);
   assert.equal(scans[0].extracted_items[0].name,'Cheese');
   assert.equal(scans[0].extracted_items[0].raw_line,'HB CHEESE WH');
   assert.equal(scans[0].extracted_items[0].confidence,'low');
+});
+test('an unverifiable AI quantity is isolated for review instead of failing the receipt',async()=>{
+  env.set('OPENAI_API_KEY','never-return-this');
+  aiResult={status:'completed',output:[{content:[{type:'output_text',text:JSON.stringify({merchant:'Test',warnings:[],skipped_non_food:0,items:[{name:'Cheese',quantity:0,unit:'oz',confidence:'medium',raw_line:'HB CHEESE WH'}]})}]}]};
+  const result=await handle(req({mode:'live',scan_id:sid,storage_path:`${uid}/${sid}.png`}));assert.equal(result.status,200);
+  assert.equal(scans[0].status,'processed');
+  assert.deepEqual(scans[0].extracted_items[0],{name:'Cheese',quantity:1,unit:'item',expires_on:null,confidence:'low',raw_line:'HB CHEESE WH'});
+  assert.match(scans[0].metadata.warnings[0],/could not be verified.*1 item/i);
 });
 test('provider failures mark scans failed without falling back silently or leaking errors',async()=>{
   env.set('OPENAI_API_KEY','never-return-this');aiFail=true;

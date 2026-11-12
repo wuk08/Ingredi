@@ -19,7 +19,7 @@ const itemSchema = {
     warnings: { type: 'array', items: { type: 'string' } },
     items: { type: 'array', items: {
       type: 'object', additionalProperties: false,
-      properties: { name: { type:'string' }, quantity: { type:'number' }, unit: { type:'string' }, confidence: { type:'string', enum:['high','medium','low'] }, raw_line: { type:'string' } },
+      properties: { name: { type:'string' }, quantity: { type:'number', minimum:0.01, maximum:10000 }, unit: { type:'string' }, confidence: { type:'string', enum:['high','medium','low'] }, raw_line: { type:'string' } },
       required: ['name','quantity','unit','confidence','raw_line'],
     } },
   }, required: ['merchant','skipped_non_food','warnings','items'],
