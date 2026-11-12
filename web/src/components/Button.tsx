@@ -8,7 +8,7 @@ interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
   block?: boolean;
 }
 
-/** Flat button. Coral primary carries a white label; never put a primary inside a yellow box. */
+/** Flat button. Forest-green primary carries a white label; use secondary controls inside lime boxes. */
 export function Button({ variant = "primary", size = "md", block, className = "", ...rest }: Props) {
   const cls = ["btn", `btn--${variant}`, size === "sm" && "btn--sm", block && "btn--block", className].filter(Boolean).join(" ");
   return <button type="button" className={cls} {...rest} />;

@@ -35,7 +35,7 @@ const tabs: Tab[] = [
   },
 ];
 
-/** Bottom tab bar. The active tab gets a coral-tint pill and a solid icon. */
+/** Bottom tab bar. The active tab gets a forest-green tint pill and a solid icon. */
 export function TabBar() {
   return (
     <nav className="tabbar" aria-label="Main">

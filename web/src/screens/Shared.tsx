@@ -6,7 +6,7 @@ import { setStore, useStore } from "../data/store";
 import { useAppState } from "../data/AppState";
 import "./celebrate.css";
 
-const shades = ["#E46F5A", "#F2C66D", "#BF4F3B", "#FBE6E0"];
+const shades = ["#8BAE4D", "#DDEAAF", "#234D3C", "#E8EFDF"];
 const START = 1240, GAIN = 50, NEXT = 1500;
 
 /** Fireworks around the gift: 3 bursts, each a ring plus rays and dots. */
@@ -19,7 +19,7 @@ function sparks(): { wrap: CSSProperties; dot: CSSProperties }[] {
   ];
   for (const b of bursts) {
     out.push({ wrap: { position: "absolute", left: b.x, top: b.y, width: 0, height: 0 },
-      dot: { position: "absolute", left: -12, top: -12, width: 24, height: 24, borderRadius: "50%", border: "2px solid #E46F5A", animation: `ig-ring .8s ${b.d}s cubic-bezier(.1,.7,.3,1) both` } });
+      dot: { position: "absolute", left: -12, top: -12, width: 24, height: 24, borderRadius: "50%", border: "2px solid #8BAE4D", animation: `ig-ring .8s ${b.d}s cubic-bezier(.1,.7,.3,1) both` } });
     for (let k = 0; k < b.n; k++) {
       const tip = k % 3 === 0;
       out.push({ wrap: { position: "absolute", left: b.x, top: b.y, width: 0, height: 0, transform: `rotate(${(360 / b.n) * k}deg)` },

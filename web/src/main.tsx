@@ -8,6 +8,8 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import "./theme/global.css";
 
 document.documentElement.dataset.platform = Capacitor.getPlatform();
+// The original Ingredi brand is intentionally light on both web and iOS.
+document.documentElement.dataset.theme = "light";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

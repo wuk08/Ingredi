@@ -1,7 +1,10 @@
-/* Ingredi logotype animation: g and r draw along their strokes, the i dot drops in and bounces twice. */
-@keyframes lt-draw{0%{stroke-dashoffset:1}100%{stroke-dashoffset:0}}
-@keyframes lt-dropx{0%{transform:translateX(70px)}55%{transform:translateX(0)}100%{transform:translateX(0)}}
-@keyframes lt-dropy{0%{transform:translateY(-170px);opacity:0;animation-timing-function:cubic-bezier(.45,0,.9,.6)}8%{opacity:1}55%{transform:translateY(0);animation-timing-function:cubic-bezier(.2,.7,.4,1)}75%{transform:translateY(-36px);animation-timing-function:cubic-bezier(.6,0,.9,.5)}95%,100%{transform:translateY(0);opacity:1}}
-@keyframes lt-squash{0%,51%{transform:scale(1,1)}55%{transform:scale(1.18,.78)}63%{transform:scale(.95,1.06)}71%,92%{transform:scale(1,1)}95%{transform:scale(1.06,.92)}100%{transform:scale(1,1)}}
+/* Original Ingredi wordmark: forest-green letters and a lime period. */
+.logotype{display:grid;place-items:center}
+.logotype__word{display:flex;align-items:flex-end;color:var(--primary);font:700 58px/.95 var(--font-display);letter-spacing:-.065em;animation:lt-word-in .55s cubic-bezier(.2,.8,.3,1) both}
+.logotype__period{display:block;flex:0 0 11px;width:11px;height:11px;margin:0 0 4px 10px;background:var(--brand-green);animation:lt-period-in .55s .2s cubic-bezier(.2,.9,.3,1.25) both}
+
+/* Preserve a subtle replayable motion from the current prototype. */
+@keyframes lt-word-in{0%{opacity:0;transform:translateY(8px);letter-spacing:-.11em}100%{opacity:1;transform:translateY(0);letter-spacing:-.065em}}
+@keyframes lt-period-in{0%{opacity:0;transform:translateY(-16px) scale(.7)}65%{opacity:1;transform:translateY(2px) scale(1.08,.9)}100%{opacity:1;transform:translateY(0) scale(1)}}
 
 @media (prefers-reduced-motion: reduce) { .logotype * { animation: none !important; } }

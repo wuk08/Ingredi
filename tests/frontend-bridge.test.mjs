@@ -32,6 +32,33 @@ test('section heading primary links retain readable button text', async () => {
   assert.doesNotMatch(styles, /\.section-heading a\s*\{/);
 });
 
+test('current UI uses the original always-light green palette and leaf-free ingredi period wordmark', async () => {
+  const [tokenCss, tokenJson, logo, logoCss, html, main, shell, welcome] = await Promise.all([
+    source('web/src/theme/tokens.css'),
+    source('web/src/theme/tokens.json'),
+    source('web/src/components/Logotype.tsx'),
+    source('web/src/components/Logotype.css'),
+    source('web/index.html'),
+    source('web/src/main.tsx'),
+    source('public/app.js'),
+    source('public/features/kitchen-views.mjs'),
+  ]);
+  const tokens = JSON.parse(tokenJson).color.tokens;
+  const value = (name) => tokens.find((token) => token.name === name)?.value;
+  assert.deepEqual(value('primary'), { light: '#234D3C', dark: '#3E6B55' });
+  assert.deepEqual(value('brand-green'), { light: '#8BAE4D', dark: '#C1D77E' });
+  assert.match(tokenCss, /--primary:\s*#234D3C/);
+  assert.match(tokenCss, /--accent-tint:\s*#DDEAAF/);
+  assert.doesNotMatch(tokenCss, /#BF4F3B/);
+  assert.match(logo, /aria-label="ingredi\."/);
+  assert.match(logo, />ingredi<span className="logotype__period"/);
+  assert.match(logoCss, /\.logotype__period[^}]*var\(--brand-green\)/);
+  assert.match(html, /<title>ingredi\.<\/title>/);
+  assert.match(main, /document\.documentElement\.dataset\.theme = "light"/);
+  assert.doesNotMatch(shell, /class="(?:mobile-brand )?brand"[^>]*>\$\{icon\("leaf"\)\}/);
+  assert.doesNotMatch(welcome, /class="brand">\$\{icon\("leaf"\)\}/);
+});
+
 test('new UI exposes original residence, verification, scope, messaging, and exchange actions', async () => {
   const [dialogs, nearby, map, chat, post, group, profile] = await Promise.all([
     source('web/src/components/CommunityDialogs.tsx'),
