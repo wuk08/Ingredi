@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { daysUntil } from "../../../public/lib/domain.mjs";
-import { Illustration, illustrationFor } from "../components/Illustration";
+import { FoodCategoryIcon } from "../components/FoodCategoryIcon";
 import { SearchIcon, TrashIcon } from "../components/Icons";
 import { TopBar } from "../components/TopBar";
 import { useAppState } from "../data/AppState";
@@ -34,7 +34,7 @@ export function MyFridge() {
       {items.length ? <section className="fridge-list" aria-label="Fridge ingredients">{items.map((item) => {
         const remaining = daysUntil(item.expires_on);
         return <article className="fridge-row" key={item.id}>
-          <span className="fridge-row__art"><Illustration name={illustrationFor(item.name)} size={64} label={item.name} /></span>
+          <span className="fridge-row__art"><FoodCategoryIcon name={item.name} size={34} /></span>
           <span className="fridge-row__copy"><b>{item.name}</b><small>{item.quantity} {item.unit}{remaining == null ? "" : ` · ${remaining < 0 ? "expired" : remaining === 0 ? "use today" : `${remaining}d left`}`}</small></span>
           <label className="fridge-date"><span>{item.expires_on ? "Best before" : "Set date"}</span><input type="date" aria-label={`Best before for ${item.name}`} value={item.expires_on || ""} disabled={busy} onChange={(event) => void setPantryDate(item.id, event.target.value || null)} /></label>
           <button className="fridge-remove" type="button" aria-label={`Remove ${item.name}`} disabled={busy} onClick={() => void removePantry(item.id)}><TrashIcon /></button>

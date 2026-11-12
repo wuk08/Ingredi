@@ -46,12 +46,12 @@ test('fridge and receipt close actions cannot bounce between each other', async 
   assert.match(receipt, /onClick=\{\(\) => nav\("\/fridge\/add", \{ replace: true \}\)\}/);
 });
 
-test('original food illustrations and the live My fridge screen are restored', async () => {
-  const [app, cook, fridge, artwork, home, recipe, scanDone, profile] = await Promise.all([
+test('simple pantry categories preserve photos and the live My fridge screen', async () => {
+  const [app, cook, fridge, categories, home, recipe, scanDone, profile] = await Promise.all([
     source('web/src/App.tsx'),
     source('web/src/screens/Cook.tsx'),
     source('web/src/screens/MyFridge.tsx'),
-    source('web/src/components/Illustration.tsx'),
+    source('web/src/components/FoodCategoryIcon.tsx'),
     source('web/src/screens/Home.tsx'),
     source('web/src/screens/Recipe.tsx'),
     source('web/src/screens/ScanDone.tsx'),
@@ -61,9 +61,10 @@ test('original food illustrations and the live My fridge screen are restored', a
   assert.match(cook, /to="\/fridge">View all/);
   for (const action of ['pantry', 'removePantry', 'setPantryDate']) assert.match(fridge, new RegExp(action));
   assert.match(fridge, /to="\/fridge\/add"/);
-  assert.match(artwork, /export function illustrationFor/);
-  for (const screen of [cook, home, recipe, scanDone, profile]) assert.match(screen, /illustrationFor\(/);
-  for (const screen of [cook, home, recipe, scanDone, profile]) assert.doesNotMatch(screen, /assets\/photos/);
+  for (const category of ['fruit', 'vegetable', 'dairy', 'protein', 'grains', 'drink', 'pantry']) assert.match(categories, new RegExp(`"${category}"`));
+  assert.match(cook, /<FoodCategoryIcon name=\{item\.name\}/);
+  assert.match(fridge, /<FoodCategoryIcon name=\{item\.name\}/);
+  for (const screen of [cook, home, recipe, scanDone, profile]) assert.match(screen, /assets\/photos/);
 });
 
 test('current UI uses the original always-light green palette and leaf-free ingredi period wordmark', async () => {

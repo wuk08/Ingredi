@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { fridgeAddedSvg } from "../assets/celebrate";
+import { photos } from "../assets/photos";
 import { ChevronIcon } from "../components/Icons";
-import { Illustration, illustrationFor } from "../components/Illustration";
 import { recipeLink } from "../data/content";
 import "./celebrate.css";
 
 const cookNow = [
-  { name: "Chicken & Spinach Stir-fry", time: "20 min", have: "Have 5/6 ingredients" },
-  { name: "Cheesy Tomato Omelette", time: "15 min", have: "Have 4/4 ingredients" },
+  { name: "Chicken & Spinach Stir-fry", photo: photos["chicken-spinach-stir-fry"], time: "20 min", have: "Have 5/6 ingredients" },
+  { name: "Cheesy Tomato Omelette", photo: photos["cheesy-tomato-omelette"], time: "15 min", have: "Have 4/4 ingredients" },
 ];
 
 export function ScanDone() {
@@ -40,7 +40,7 @@ export function ScanDone() {
           <h2 className="h3" style={{ fontSize: 15 }}>You can cook now</h2>
           {cookNow.map((r) => (
             <Link key={r.name} to={recipeLink(r.name)} className="card" style={{ display: "flex", gap: 12, alignItems: "center", padding: 10 }}>
-              <span className="scan-done-art"><Illustration name={illustrationFor(r.name)} size={64} label={r.name} /></span>
+              <span role="img" aria-label={r.name} style={{ width: 72, height: 72, borderRadius: 12, flexShrink: 0, background: `var(--surface-muted) url("${r.photo}") center / cover no-repeat` }} />
               <span style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6, minWidth: 0 }}>
                 <span style={{ fontSize: 15, fontWeight: 600 }}>{r.name}</span>
                 <span style={{ display: "flex", gap: 6, flexWrap: "wrap" }}><span className="tag">{r.time}</span><span className="tag">{r.have}</span></span>
