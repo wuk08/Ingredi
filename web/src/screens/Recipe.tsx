@@ -2,8 +2,8 @@ import { useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { catalog } from "../../../public/lib/recipes.mjs";
 import { normalizeIngredient } from "../../../public/lib/domain.mjs";
-import { photos } from "../assets/photos";
 import { BackIcon, BookmarkIcon } from "../components/Icons";
+import { Illustration, illustrationFor } from "../components/Illustration";
 import { recipes as detailedRecipes } from "../data/content";
 import { useAppState } from "../data/AppState";
 
@@ -23,7 +23,7 @@ export function Recipe() {
     if (detailed) return { ...detailed, key: id, ingredients: detailed.ingredients.map((item) => ({ ...item, have: available.has(normalizeIngredient(item.name)) })) };
     const found = catalog(backendRecipes).find((item: any) => item.id === id) || catalog(backendRecipes)[0];
     if (!found) return { ...detailedRecipes.bibimbap, key: "bibimbap" };
-    return { key: found.key, name: found.name, photo: photos[found.name.toLowerCase().includes("kimchi") ? "kimchi-fried-rice" : "shakshuka"], meta: [`${found.cook_minutes} min`, `${found.servings || 2} servings`, found.difficulty || "Easy", found.cuisine || "Everyday"], ingredients: found.ingredients.map((value: any) => { const name = typeof value === "string" ? value : value.name; return { name, importance: "Essential", have: available.has(normalizeIngredient(name)), sub: "ask your building nearby" }; }), steps: found.instructions || [] };
+    return { key: found.key, name: found.name, meta: [`${found.cook_minutes} min`, `${found.servings || 2} servings`, found.difficulty || "Easy", found.cuisine || "Everyday"], ingredients: found.ingredients.map((value: any) => { const name = typeof value === "string" ? value : value.name; return { name, importance: "Essential", have: available.has(normalizeIngredient(name)), sub: "ask your building nearby" }; }), steps: found.instructions || [] };
   }, [backendRecipes, id, pantry]);
   const [tab, setTab] = useState<"ing" | "steps">("ing");
   const saved = community.saved?.includes(recipe.key) || false;
@@ -33,7 +33,8 @@ export function Recipe() {
   return (
     <>
       <main className="screen-scroll" style={{ gap: 20, paddingBottom: 24 }}>
-        <div role="img" aria-label={recipe.name} style={{ height: 260, position: "relative", background: `var(--surface-muted) url("${recipe.photo}") center / cover no-repeat` }}>
+        <div role="img" aria-label={recipe.name} className="recipe-hero-illustrated">
+          <Illustration name={illustrationFor(recipe.name)} size={210} label="" />
           <button type="button" className="icon-btn icon-btn--over-media" aria-label="Back" style={{ position: "absolute", left: 16, top: "var(--overlay-top)" }}
             onClick={() => (window.history.state?.idx ? nav(-1) : nav("/cook"))}><BackIcon /></button>
           <button type="button" className="icon-btn icon-btn--over-media" aria-label={saved ? "Saved" : "Save recipe"} aria-pressed={saved}

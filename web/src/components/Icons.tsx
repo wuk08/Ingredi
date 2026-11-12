@@ -16,3 +16,4 @@ export const CameraIcon = ({ size = 22, color = "var(--text-secondary)" }: P) =>
 export const MoreIcon = ({ size = 20, color = "var(--text-primary)" }: P) => <svg width={size} height={size} viewBox="0 0 24 24" fill={color} aria-hidden="true"><circle cx="5" cy="12" r="1.8" /><circle cx="12" cy="12" r="1.8" /><circle cx="19" cy="12" r="1.8" /></svg>;
 export const SendIcon = ({ size = 20, color = "#fff" }: P) => <svg {...base(size, color)}><path d="M5 12h14M13 6l6 6-6 6" /></svg>;
 export const CheckIcon = ({ size = 18, color = "var(--text-primary)" }: P) => <svg {...base(size, color, 2.4)}><path d="m5 12.5 4.5 4.5L19 7.5" /></svg>;
+export const TrashIcon = ({ size = 20, color = "var(--text-secondary)" }: P) => <svg {...base(size, color)}><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5" /></svg>;

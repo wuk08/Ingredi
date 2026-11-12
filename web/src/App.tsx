@@ -9,6 +9,7 @@ import { Login } from "./screens/Login";
 import { MealSwap } from "./screens/MealSwap";
 import { Messages } from "./screens/Messages";
 import { My } from "./screens/My";
+import { MyFridge } from "./screens/MyFridge";
 import { MyPosts } from "./screens/MyPosts";
 import { Nearby } from "./screens/Nearby";
 import { Notifications } from "./screens/Notifications";
@@ -48,6 +49,7 @@ export function App() {
         <Route path="/recipe/:id" element={<Recipe />} />
         <Route path="/meal-swap" element={<MealSwap />} />
         <Route path="/meal-swap/:id" element={<MealSwap />} />
+        <Route path="/fridge" element={<MyFridge />} />
         <Route path="/fridge/add" element={<AddIngredient />} />
         <Route path="/scan" element={<ScanCamera />} />
         <Route path="/scan/review" element={<ScanReview />} />

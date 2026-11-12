@@ -46,6 +46,26 @@ test('fridge and receipt close actions cannot bounce between each other', async 
   assert.match(receipt, /onClick=\{\(\) => nav\("\/fridge\/add", \{ replace: true \}\)\}/);
 });
 
+test('original food illustrations and the live My fridge screen are restored', async () => {
+  const [app, cook, fridge, artwork, home, recipe, scanDone, profile] = await Promise.all([
+    source('web/src/App.tsx'),
+    source('web/src/screens/Cook.tsx'),
+    source('web/src/screens/MyFridge.tsx'),
+    source('web/src/components/Illustration.tsx'),
+    source('web/src/screens/Home.tsx'),
+    source('web/src/screens/Recipe.tsx'),
+    source('web/src/screens/ScanDone.tsx'),
+    source('web/src/screens/My.tsx'),
+  ]);
+  assert.match(app, /path="\/fridge" element=\{<MyFridge \/>\}/);
+  assert.match(cook, /to="\/fridge">View all/);
+  for (const action of ['pantry', 'removePantry', 'setPantryDate']) assert.match(fridge, new RegExp(action));
+  assert.match(fridge, /to="\/fridge\/add"/);
+  assert.match(artwork, /export function illustrationFor/);
+  for (const screen of [cook, home, recipe, scanDone, profile]) assert.match(screen, /illustrationFor\(/);
+  for (const screen of [cook, home, recipe, scanDone, profile]) assert.doesNotMatch(screen, /assets\/photos/);
+});
+
 test('current UI uses the original always-light green palette and leaf-free ingredi period wordmark', async () => {
   const [tokenCss, tokenJson, logo, logoCss, html, main, shell, welcome] = await Promise.all([
     source('web/src/theme/tokens.css'),

@@ -1,8 +1,8 @@
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { photos } from "../assets/photos";
 import { Avatar } from "../components/Avatar";
 import { ChevronIcon } from "../components/Icons";
+import { Illustration, illustrationFor } from "../components/Illustration";
 import { useAppState } from "../data/AppState";
 
 export function My() {
@@ -18,7 +18,7 @@ export function My() {
     <section className="profile-heading"><Avatar name={profile.display_name} size={70} /><span><h1 className="h1">{profile.display_name}</h1><p>{home?.name || profile.city || "Your neighborhood"}<br /><small>{signed ? "Private Supabase account" : mockProvider ? `${mockProvider} prototype account` : "Device demo"}</small></p></span><button className="btn btn--secondary btn--sm" onClick={() => setEditing(!editing)}>Edit</button></section>
     {editing && <form className="card form-stack profile-form" onSubmit={saveProfile}><label className="form-field">Display name<input name="display_name" defaultValue={profile.display_name} maxLength={80} required /></label><label className="form-field">City<input name="city" defaultValue={profile.city} maxLength={100} /></label><button className="btn btn--primary" disabled={busy}>Save profile</button></form>}
     <section className="box impact-card"><div><h2 className="h3">My Impact</h2><span>Level 3 · Good Neighbor</span></div><b className="impact-points">{impact.points.toLocaleString()} points</b><div className="impact-stats"><span><b>{impact.shares}</b><small>Items shared</small></span><span><b>{impact.meals}</b><small>Meals rescued</small></span><span><b>${impact.savings}</b><small>Est. savings</small></span></div></section>
-    <section className="form-stack"><h2 className="h3">Saved recipes</h2>{community.saved?.length ? <div className="saved-row">{community.saved.map((key: string) => <Link to={`/recipe/${key.includes("kimchi") ? "kimchi-fried-rice" : key}`} key={key}><span style={{ backgroundImage: `url("${photos[key.includes("kimchi") ? "kimchi-fried-rice" : "bibimbap"]}")` }} /><small>{key}</small></Link>)}</div> : <Link to="/cook" className="card feature-link"><span><b>Keep a little inspiration</b><small>Save a recipe to find it here.</small></span><ChevronIcon /></Link>}</section>
+    <section className="form-stack"><h2 className="h3">Saved recipes</h2>{community.saved?.length ? <div className="saved-row">{community.saved.map((key: string) => <Link to={`/recipe/${key.includes("kimchi") ? "kimchi-fried-rice" : key}`} key={key}><span className="saved-recipe-art"><Illustration name={illustrationFor(key)} size={76} label={key} /></span><small>{key}</small></Link>)}</div> : <Link to="/cook" className="card feature-link"><span><b>Keep a little inspiration</b><small>Save a recipe to find it here.</small></span><ChevronIcon /></Link>}</section>
     <section className="settings-list">
       <button type="button" onClick={() => setDialog("setup")}><span><b>Residence &amp; student status</b><small>{home?.name || "Set up your community"}</small></span><ChevronIcon /></button>
       {community.student?.isStudent && <button type="button" onClick={() => setDialog("verify")}><span><b>Sample student ID check</b><small>{community.student.verification === "demo_complete" ? "Demo check completed" : "Required before exchanging"}</small></span><ChevronIcon /></button>}
